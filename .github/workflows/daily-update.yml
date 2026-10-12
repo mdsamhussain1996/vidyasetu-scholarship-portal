@@ -1,0 +1,81 @@
+name: "Daily Opportunities Discovery & Verification"
+
+on:
+  schedule:
+    # Daily at 02:30 UTC ≈ 08:00 IST
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  discover-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Discovery & Verification Engine
+        run: |
+          python scripts/discover.py
+
+      - name: Validate Dataset Integrity
+        run: |
+          python scripts/validate.py
+
+      - name: Check for modified files
+        id: git-check
+        run: |
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit & Push Verified Updates
+        if: steps.git-check.outputs.has_changes == 'true'
+        run: |
+          git config user.name "VidyaSetu Automation Bot"
+          git config user.email "actions@github.com"
+          git add data/
+          git commit -m "chore(data): automated daily opportunities update [$(date +'%Y-%m-%d')]"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for Pending Review Items
+        id: pending-check
+        run: |
+          if [ -f data/pending.json ] && [ "$(jq '. | length' data/pending.json 2>/dev/null || echo 0)" -gt 0 ]; then
+            echo "has_pending=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pending=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request for Pending Review
+        if: steps.pending-check.outputs.has_pending == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat(data): new opportunities submitted for human review"
+          title: "New opportunities for review – $(date +'%Y-%m-%d')"
+          body: |
+            ### Automated Discovery Review Required
+            New educational opportunities were scraped or submitted and placed in `data/pending.json` for human verification.
+            
+            - Please verify official provider authenticity.
+            - Ensure no registration fee is demanded.
+            - Once approved, merge this PR to add them to `data/opportunities.json`.
+          branch: "auto-update/pending-review-$(date +'%Y-%m-%d')"
+          delete-branch: true

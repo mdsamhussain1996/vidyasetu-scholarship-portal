@@ -1,68 +1,157 @@
-// VidyaSetu Application Core Engine
+// VidyaSetu Core Application Engine - Self-Updating Edition
 
 (function () {
   'use strict';
 
-  // State
+  // Global State
   const state = {
-    section: 'all', // 'all', 'india', 'abroad'
-    searchQuery: '',
+    opportunities: [],
+    meta: null,
+    loading: true,
+    error: null,
+
+    // Filter states
+    section: 'all', // 'all', 'india', 'abroad', 'providers'
     level: 'all',
-    type: 'all',
+    status: 'all',
     category: 'all',
-    stream: 'all',
+    country: 'all',
+    stateFilter: 'all',
+    target: 'all',
+    income: 'all',
+    searchQuery: '',
     sort: 'default',
     activeChip: null,
+
+    // Provider filter
+    providerKind: 'all',
+    providerSearch: '',
+    selectedProviderSlug: null,
+
+    // Preferences & Features
+    lang: localStorage.getItem('vidyasetu_lang') || 'en',
+    theme: localStorage.getItem('vidyasetu_theme') || 'light',
     viewMode: 'grid', // 'grid' or 'compact'
     bookmarks: JSON.parse(localStorage.getItem('vidyasetu_bookmarks') || '[]'),
-    compare: [],
-    theme: localStorage.getItem('vidyasetu_theme') || 'light'
+    compare: []
   };
 
-  // DOM Elements Cache
+  // Hindi Translations Dictionary
+  const I18N = {
+    en: {
+      siteTagline: "National & Global Opportunities Portal",
+      navWizardText: "Match My Profile",
+      navCalendarText: "Deadline Calendar",
+      navSavedText: "Saved",
+      navSubmitText: "Submit Opportunity",
+      heroBadgeLevels: "12th Pass • Bachelor's • Master's • PhD • Postdoc",
+      verifiedBadge: "✓ Verified Daily by Official Sources",
+      heroMainTitle: "Every Scholarship, Government Fund, Private Grant & Internship in One Place.",
+      heroSubTitle: "150+ verified opportunities across MoE, DST, AICTE, CSIR, Indian state portals, Tata Trusts, Reliance, and fully funded global fellowships in Europe, USA, UK, Canada, Japan, and Australia.",
+      lblMetricIndia: "Opportunities in India",
+      lblMetricAbroad: "Opportunities Abroad",
+      lblMetricGov: "Government Funds",
+      lblMetricPvt: "Private & CSR Funds",
+      lblMetricIntern: "Funded Internships",
+      tabLabelAll: "All Opportunities",
+      tabLabelIndia: "SECTION 1: India",
+      tabLabelAbroad: "SECTION 2: Abroad",
+      tabLabelProviders: "Providers Directory",
+      btnFindEligibleText: "Find Eligible Opportunities",
+      lblQuickFilters: "Quick Filters:",
+      lblClearFilters: "Clear Filters",
+      lblLoadingTitle: "Loading Verified Opportunities...",
+      lblGuidesTitle: "Essential Guides & Preparation Resources",
+      lblGuidesSub: "Everything you need to successfully win national and international scholarships"
+    },
+    hi: {
+      siteTagline: "राष्ट्रीय एवं अंतर्राष्ट्रीय अवसर पोर्टल",
+      navWizardText: "मेरी योग्यता जाँचें",
+      navCalendarText: "आवेदन कैलेंडर",
+      navSavedText: "सहेजे गए",
+      navSubmitText: "नया अवसर जोड़ें",
+      heroBadgeLevels: "12वीं पास • स्नातक • स्नातकोत्तर • पीएचडी • पोस्टडॉक",
+      verifiedBadge: "✓ आधिकारिक स्रोतों द्वारा दैनिक सत्यापित",
+      heroMainTitle: "सभी सरकारी व निजी छात्रवृत्तियां, रिसर्च प्रोजेक्ट और इंटर्नशिप एक ही स्थान पर।",
+      heroSubTitle: "शिक्षा मंत्रालय, DST, AICTE, CSIR, राज्य पोर्टलों, टाटा ट्रस्ट्स, रिलायंस और यूरोप, अमेरिका, यूके, कनाडा, जापान की 150+ पूर्णतः वित्तपोषित छात्रवृत्तियां।",
+      lblMetricIndia: "भारत में अवसर",
+      lblMetricAbroad: "विदेश में अवसर",
+      lblMetricGov: "सरकारी फंड्स",
+      lblMetricPvt: "निजी व CSR फंड्स",
+      lblMetricIntern: "सवेतन इंटर्नशिप",
+      tabLabelAll: "सभी अवसर",
+      tabLabelIndia: "भाग 1: भारत में अवसर",
+      tabLabelAbroad: "भाग 2: विदेश में अवसर",
+      tabLabelProviders: "संस्थान निर्देशिका",
+      btnFindEligibleText: "पात्र अवसर खोजें",
+      lblQuickFilters: "त्वरित फ़िल्टर:",
+      lblClearFilters: "फ़िल्टर हटाएं",
+      lblLoadingTitle: "सत्यापित अवसर लोड हो रहे हैं...",
+      lblGuidesTitle: "महत्वपूर्ण मार्गदर्शिका एवं दस्तावेज़ चेकलिस्ट",
+      lblGuidesSub: "राष्ट्रीय व वैश्विक छात्रवृत्तियों में सफलता पाने हेतु सम्पूर्ण विवरण"
+    }
+  };
+
+  // DOM Elements
   const els = {
-    // Theme
+    // Top Bar
+    closingSoonStrip: document.getElementById('closingSoonStrip'),
+    closingSoonCarousel: document.getElementById('closingSoonCarousel'),
+    langToggleBtn: document.getElementById('langToggleBtn'),
+    currentLangLabel: document.getElementById('currentLangLabel'),
     themeToggleBtn: document.getElementById('themeToggleBtn'),
     themeIcon: document.getElementById('themeIcon'),
+    verifiedStatusBadge: document.getElementById('verifiedStatusBadge'),
 
-    // Metrics
+    // Hero metrics
     metricIndiaCount: document.getElementById('metricIndiaCount'),
     metricAbroadCount: document.getElementById('metricAbroadCount'),
     metricGovCount: document.getElementById('metricGovCount'),
     metricPvtCount: document.getElementById('metricPvtCount'),
     metricInternCount: document.getElementById('metricInternCount'),
 
-    // Section Tabs
+    // Section tabs
     tabSectionAll: document.getElementById('tabSectionAll'),
     tabSectionIndia: document.getElementById('tabSectionIndia'),
     tabSectionAbroad: document.getElementById('tabSectionAbroad'),
+    tabSectionProviders: document.getElementById('tabSectionProviders'),
     badgeAll: document.getElementById('badgeAll'),
     badgeIndia: document.getElementById('badgeIndia'),
     badgeAbroad: document.getElementById('badgeAbroad'),
+    badgeProviders: document.getElementById('badgeProviders'),
 
-    // Filters
+    // Filter controls
+    filterSection: document.getElementById('filterSection'),
     searchInput: document.getElementById('searchInput'),
+    btnHeroWizard: document.getElementById('btnHeroWizard'),
     filterLevel: document.getElementById('filterLevel'),
-    filterType: document.getElementById('filterType'),
+    filterStatus: document.getElementById('filterStatus'),
     filterCategory: document.getElementById('filterCategory'),
-    filterStream: document.getElementById('filterStream'),
-    sortOrder: document.getElementById('sortOrder'),
+    filterCountry: document.getElementById('filterCountry'),
+    filterState: document.getElementById('filterState'),
+    filterTarget: document.getElementById('filterTarget'),
+    filterIncome: document.getElementById('filterIncome'),
     chips: document.querySelectorAll('.chip-btn'),
     btnResetFilters: document.getElementById('btnResetFilters'),
 
-    // View & Results
+    // Views & Containers
+    loadingState: document.getElementById('loadingState'),
+    errorState: document.getElementById('errorState'),
+    errorMessage: document.getElementById('errorMessage'),
+    resultsMeta: document.getElementById('resultsMeta'),
+    resultsCountText: document.getElementById('resultsCountText'),
     cardsGridContainer: document.getElementById('cardsGridContainer'),
+    providersContainer: document.getElementById('providersContainer'),
+    providersGrid: document.getElementById('providersGrid'),
+    providerSearchInput: document.getElementById('providerSearchInput'),
+    providerKindFilter: document.getElementById('providerKindFilter'),
     noResultsState: document.getElementById('noResultsState'),
     btnResetNoResults: document.getElementById('btnResetNoResults'),
-    resultsCountText: document.getElementById('resultsCountText'),
+
     viewModeGrid: document.getElementById('viewModeGrid'),
     viewModeCompact: document.getElementById('viewModeCompact'),
 
-    // Bookmarks & Badges
-    btnSavedBookmarks: document.getElementById('btnSavedBookmarks'),
-    savedCountBadge: document.getElementById('savedCountBadge'),
-
-    // Detail Modal
+    // Modals
     detailModal: document.getElementById('detailModal'),
     modalCloseBtn: document.getElementById('modalCloseBtn'),
     modalBadgeGroup: document.getElementById('modalBadgeGroup'),
@@ -78,10 +167,12 @@
     modalDeadline: document.getElementById('modalDeadline'),
     modalOfficialLink: document.getElementById('modalOfficialLink'),
     modalBookmarkBtn: document.getElementById('modalBookmarkBtn'),
+    modalReportBrokenBtn: document.getElementById('modalReportBrokenBtn'),
+    btnModalGoogleCal: document.getElementById('btnModalGoogleCal'),
+    btnModalICS: document.getElementById('btnModalICS'),
 
     // Wizard
     btnOpenWizard: document.getElementById('btnOpenWizard'),
-    btnHeroWizard: document.getElementById('btnHeroWizard'),
     wizardModal: document.getElementById('wizardModal'),
     wizardCloseBtn: document.getElementById('wizardCloseBtn'),
     btnCancelWizard: document.getElementById('btnCancelWizard'),
@@ -91,7 +182,7 @@
     wizCategory: document.getElementById('wizCategory'),
     wizDestination: document.getElementById('wizDestination'),
 
-    // Compare Drawer & Modal
+    // Comparison Drawer & Modal
     compareDrawer: document.getElementById('compareDrawer'),
     compareBadgeCount: document.getElementById('compareBadgeCount'),
     btnLaunchComparison: document.getElementById('btnLaunchComparison'),
@@ -106,8 +197,11 @@
     calendarModal: document.getElementById('calendarModal'),
     calendarCloseBtn: document.getElementById('calendarCloseBtn'),
     btnCloseCalendarFooter: document.getElementById('btnCloseCalendarFooter'),
+    dynamicCalendarGrid: document.getElementById('dynamicCalendarGrid'),
 
     // Bookmarks Modal
+    btnSavedBookmarks: document.getElementById('btnSavedBookmarks'),
+    savedCountBadge: document.getElementById('savedCountBadge'),
     bookmarksModal: document.getElementById('bookmarksModal'),
     bookmarksCloseBtn: document.getElementById('bookmarksCloseBtn'),
     btnCloseBookmarksFooter: document.getElementById('btnCloseBookmarksFooter'),
@@ -117,16 +211,64 @@
 
   let activeModalItem = null;
 
-  // Initialize App
-  function init() {
+  // Initialize Application
+  async function init() {
     applyTheme(state.theme);
-    updateMetrics();
-    updateBookmarkBadge();
+    applyLanguage(state.lang);
     bindEvents();
-    renderCards();
+    handleHashRouting();
+
+    try {
+      await loadData();
+    } catch (err) {
+      showError(err.message);
+    }
   }
 
-  // Theme Handling
+  // Fetch Data from JSON files (Phase 1)
+  async function loadData() {
+    els.loadingState.style.display = 'block';
+    els.errorState.style.display = 'none';
+
+    try {
+      const [oppsRes, metaRes] = await Promise.all([
+        fetch('data/opportunities.json'),
+        fetch('data/meta.json').catch(() => null)
+      ]);
+
+      if (!oppsRes.ok) {
+        throw new Error(`Failed to load opportunities data (HTTP ${oppsRes.status})`);
+      }
+
+      state.opportunities = await oppsRes.json();
+      if (metaRes && metaRes.ok) {
+        state.meta = await metaRes.json();
+      }
+
+      state.loading = false;
+      els.loadingState.style.display = 'none';
+
+      updateMetrics();
+      renderClosingSoonStrip();
+      renderCards();
+      renderProviders();
+      updateBookmarkBadge();
+
+      // Check if hash points to specific opportunity
+      checkHashDeepLink();
+    } catch (e) {
+      state.loading = false;
+      showError(e.message || "Failed to load data/opportunities.json");
+    }
+  }
+
+  function showError(msg) {
+    els.loadingState.style.display = 'none';
+    els.errorState.style.display = 'block';
+    els.errorMessage.textContent = msg;
+  }
+
+  // Theme Management
   function applyTheme(theme) {
     state.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
@@ -140,23 +282,74 @@
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   }
 
-  // Calculate & Display Header Metrics
-  function updateMetrics() {
-    if (typeof GET_METRICS === 'function') {
-      const m = GET_METRICS();
-      if (els.metricIndiaCount) els.metricIndiaCount.textContent = m.india;
-      if (els.metricAbroadCount) els.metricAbroadCount.textContent = m.abroad;
-      if (els.metricGovCount) els.metricGovCount.textContent = m.government;
-      if (els.metricPvtCount) els.metricPvtCount.textContent = m.private;
-      if (els.metricInternCount) els.metricInternCount.textContent = m.internships;
+  // Language Management (Phase 5)
+  function applyLanguage(lang) {
+    state.lang = lang;
+    localStorage.setItem('vidyasetu_lang', lang);
+    const dict = I18N[lang] || I18N.en;
 
-      if (els.badgeAll) els.badgeAll.textContent = m.total;
-      if (els.badgeIndia) els.badgeIndia.textContent = m.india;
-      if (els.badgeAbroad) els.badgeAbroad.textContent = m.abroad;
+    els.currentLangLabel.textContent = lang === 'en' ? 'हिंदी' : 'English';
+
+    Object.keys(dict).forEach(key => {
+      const el = document.getElementById(key);
+      if (el) el.textContent = dict[key];
+    });
+  }
+
+  function toggleLanguage() {
+    applyLanguage(state.lang === 'en' ? 'hi' : 'en');
+  }
+
+  // Metrics & Badges
+  function updateMetrics() {
+    const total = state.opportunities.length;
+    const india = state.opportunities.filter(o => o.section === 'india').length;
+    const abroad = state.opportunities.filter(o => o.section === 'abroad').length;
+    const gov = state.opportunities.filter(o => o.type === 'government').length;
+    const pvt = state.opportunities.filter(o => o.type === 'private').length;
+    const intern = state.opportunities.filter(o => o.category === 'Internship').length;
+
+    // Unique providers count
+    const providersSet = new Set(state.opportunities.map(o => o.provider.slug));
+
+    els.metricIndiaCount.textContent = india;
+    els.metricAbroadCount.textContent = abroad;
+    els.metricGovCount.textContent = gov;
+    els.metricPvtCount.textContent = pvt;
+    els.metricInternCount.textContent = intern;
+
+    els.badgeAll.textContent = total;
+    els.badgeIndia.textContent = india;
+    els.badgeAbroad.textContent = abroad;
+    els.badgeProviders.textContent = providersSet.size;
+
+    // Meta verification badge
+    if (state.meta && state.meta.lastVerifiedDate) {
+      els.verifiedStatusBadge.innerHTML = `<span>✓</span> Verified ${state.meta.lastVerifiedDate} (${total} Schemes)`;
     }
   }
 
-  // Bookmark Management
+  // Imminent Deadline / Closing Soon Strip (Phase 5)
+  function renderClosingSoonStrip() {
+    const today = new Date().toISOString().slice(0, 10);
+    const withDeadlines = state.opportunities
+      .filter(o => o.deadline && o.deadline >= today)
+      .sort((a, b) => a.deadline.localeCompare(b.deadline))
+      .slice(0, 8);
+
+    if (withDeadlines.length === 0) {
+      els.closingSoonStrip.style.display = 'none';
+      return;
+    }
+
+    els.closingSoonCarousel.innerHTML = withDeadlines.map(it => `
+      <div class="closing-pill" onclick="window.VidyaSetu.openDetailModal('${it.id}')">
+        <span>⏰ ${it.deadline}</span>: <strong>${it.title.slice(0, 32)}...</strong>
+      </div>
+    `).join('');
+  }
+
+  // Bookmarking
   function isBookmarked(id) {
     return state.bookmarks.includes(id);
   }
@@ -181,7 +374,7 @@
     }
   }
 
-  // Compare Management
+  // Comparison
   function isInCompare(id) {
     return state.compare.includes(id);
   }
@@ -211,37 +404,75 @@
 
   // Filtering Logic
   function getFilteredOpportunities() {
-    return OPPORTUNITIES_DATA.filter(item => {
-      // 1. Section match (All, India, Abroad)
-      if (state.section !== 'all' && item.section !== state.section) {
+    const today = new Date().toISOString().slice(0, 10);
+
+    return state.opportunities.filter(item => {
+      // 1. Specific Provider slug filter
+      if (state.selectedProviderSlug && item.provider.slug !== state.selectedProviderSlug) {
         return false;
       }
 
-      // 2. Education level filter
+      // 2. Section (All, India, Abroad)
+      if (state.section !== 'all' && state.section !== 'providers' && item.section !== state.section) {
+        return false;
+      }
+
+      // 3. Education level
       if (state.level !== 'all' && !item.educationLevel.includes(state.level)) {
         return false;
       }
 
-      // 3. Funding authority filter (government / private)
-      if (state.type !== 'all' && item.type !== state.type) {
-        return false;
+      // 4. Status Filter
+      if (state.status !== 'all') {
+        if (state.status === 'closing-soon') {
+          if (!item.deadline || item.deadline < today) return false;
+          const diffDays = (new Date(item.deadline) - new Date(today)) / (1000 * 60 * 60 * 24);
+          if (diffDays > 30) return false;
+        } else if (item.status !== state.status) {
+          return false;
+        }
       }
 
-      // 4. Opportunity category (Scholarship, Fellowship, Internship)
+      // 5. Category Filter
       if (state.category !== 'all' && item.category !== state.category) {
         return false;
       }
 
-      // 5. Academic Stream
-      if (state.stream !== 'all') {
-        const streamLower = state.stream.toLowerCase();
-        const matchesStream = item.streams.some(s => 
-          s.toLowerCase().includes(streamLower) || s.toLowerCase().includes('all disciplines')
-        );
-        if (!matchesStream) return false;
+      // 6. Country Filter
+      if (state.country !== 'all') {
+        if (!item.country || !item.country.toLowerCase().includes(state.country.toLowerCase())) {
+          return false;
+        }
       }
 
-      // 6. Quick Chips
+      // 7. State Filter
+      if (state.stateFilter !== 'all') {
+        if (!item.state || item.state !== state.stateFilter) {
+          return false;
+        }
+      }
+
+      // 8. Target Group / Quota
+      if (state.target !== 'all') {
+        const tgStr = item.targetGroup.join(' ').toLowerCase();
+        if (state.target === 'women' && !tgStr.includes('women') && !tgStr.includes('girl')) return false;
+        if (state.target === 'sc' && !tgStr.includes('sc') && !tgStr.includes('scheduled caste')) return false;
+        if (state.target === 'st' && !tgStr.includes('st') && !tgStr.includes('scheduled tribe')) return false;
+        if (state.target === 'obc' && !tgStr.includes('obc') && !tgStr.includes('backward')) return false;
+        if (state.target === 'minority' && !tgStr.includes('minority')) return false;
+        if (state.target === 'pwd' && !tgStr.includes('pwd') && !tgStr.includes('disab')) return false;
+        if (state.target === 'merit' && !tgStr.includes('merit')) return false;
+      }
+
+      // 9. Income Limit
+      if (state.income !== 'all') {
+        const cap = parseInt(state.income, 10);
+        if (item.incomeLimitINR !== null && item.incomeLimitINR > cap) {
+          return false;
+        }
+      }
+
+      // 10. Quick Chips
       if (state.activeChip) {
         switch (state.activeChip) {
           case 'after12':
@@ -256,6 +487,9 @@
           case 'phd':
             if (!item.educationLevel.includes('PhD')) return false;
             break;
+          case 'postdoc':
+            if (!item.educationLevel.includes('Postdoc')) return false;
+            break;
           case 'women':
             if (!item.targetGroup.some(t => t.toLowerCase().includes('women') || t.toLowerCase().includes('girl'))) return false;
             break;
@@ -268,20 +502,22 @@
           case 'intern':
             if (item.category !== 'Internship') return false;
             break;
+          case 'jrf':
+            if (!item.category.includes('Project Position')) return false;
+            break;
         }
       }
 
-      // 7. Text Search Query
+      // 11. Search Query
       if (state.searchQuery.trim() !== '') {
         const q = state.searchQuery.toLowerCase();
         const inTitle = item.title.toLowerCase().includes(q);
-        const inAgency = item.fundingAgency.toLowerCase().includes(q);
-        const inCoverage = item.coverage.toLowerCase().includes(q);
+        const inAgency = item.provider.name.toLowerCase().includes(q);
         const inEligibility = item.eligibility.toLowerCase().includes(q);
         const inTags = item.tags.some(t => t.toLowerCase().includes(q));
         const inStreams = item.streams.some(s => s.toLowerCase().includes(q));
 
-        if (!inTitle && !inAgency && !inCoverage && !inEligibility && !inTags && !inStreams) {
+        if (!inTitle && !inAgency && !inEligibility && !inTags && !inStreams) {
           return false;
         }
       }
@@ -289,27 +525,39 @@
       return true;
     }).sort((a, b) => {
       if (state.sort === 'amount-high') {
-        return (b.amountVal || 0) - (a.amountVal || 0);
+        return (b.amountValINR || 0) - (a.amountValINR || 0);
       }
       if (state.sort === 'title-asc') {
         return a.title.localeCompare(b.title);
       }
-      return 0; // Default curated order
+      return 0;
     });
   }
 
-  // Render Opportunity Cards
+  // Render Opportunities Cards
   function renderCards() {
+    if (state.section === 'providers') {
+      els.cardsGridContainer.style.display = 'none';
+      els.filterSection.style.display = 'none';
+      els.resultsMeta.style.display = 'none';
+      els.providersContainer.style.display = 'block';
+      return;
+    } else {
+      els.cardsGridContainer.style.display = 'grid';
+      els.filterSection.style.display = 'block';
+      els.resultsMeta.style.display = 'flex';
+      els.providersContainer.style.display = 'none';
+    }
+
     const list = getFilteredOpportunities();
 
-    // Update count text
     els.resultsCountText.innerHTML = `Showing <span>${list.length}</span> ${
+      state.selectedProviderSlug ? `Opportunities from ${state.selectedProviderSlug}` :
       state.section === 'india' ? 'Opportunities in India' : 
       state.section === 'abroad' ? 'Opportunities Abroad' : 
-      'Total Opportunities'
+      'Verified Opportunities'
     }`;
 
-    // Handle empty state
     if (list.length === 0) {
       els.cardsGridContainer.innerHTML = '';
       els.noResultsState.style.display = 'block';
@@ -318,11 +566,10 @@
       els.noResultsState.style.display = 'none';
     }
 
-    // Grid vs Compact layout
     if (state.viewMode === 'compact') {
       els.cardsGridContainer.style.gridTemplateColumns = '1fr';
     } else {
-      els.cardsGridContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(390px, 1fr))';
+      els.cardsGridContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
     }
 
     els.cardsGridContainer.innerHTML = list.map(item => {
@@ -332,16 +579,15 @@
 
       const sectionBadge = isIndia 
         ? '<span class="badge badge-india">🇮🇳 India</span>'
-        : '<span class="badge badge-abroad">🌍 Abroad</span>';
+        : `<span class="badge badge-abroad">🌍 ${item.country || 'Abroad'}</span>`;
 
       const typeBadge = item.type === 'government'
         ? '<span class="badge badge-gov">🏛️ Govt Fund</span>'
-        : '<span class="badge badge-pvt">💼 Private / CSR</span>';
+        : item.type === 'university'
+        ? '<span class="badge badge-uni">🎓 University</span>'
+        : '<span class="badge badge-pvt">💼 Private CSR</span>';
 
-      const catBadge = item.category === 'Internship'
-        ? '<span class="badge badge-intern">🔬 Internship</span>'
-        : `<span class="badge badge-gov">${item.category}</span>`;
-
+      const statusBadge = `<span class="badge badge-status-${item.status}">${item.status.toUpperCase()}</span>`;
       const levelPills = item.educationLevel.map(l => `<span class="level-tag">${l}</span>`).join('');
 
       return `
@@ -350,7 +596,7 @@
             <div class="badge-group">
               ${sectionBadge}
               ${typeBadge}
-              ${catBadge}
+              ${statusBadge}
             </div>
 
             <div class="card-actions-quick">
@@ -374,7 +620,9 @@
           </div>
 
           <div class="card-body">
-            <div class="agency-label">${item.fundingAgency}</div>
+            <a href="#/provider/${item.provider.slug}" class="agency-label-link" title="View all from this provider">
+              🏛️ ${item.provider.name} <span>→</span>
+            </a>
             <h3 class="card-title" onclick="window.VidyaSetu.openDetailModal('${item.id}')">${item.title}</h3>
 
             <!-- Funding Highlight -->
@@ -382,7 +630,6 @@
               <div class="funding-amount">
                 <span>💰</span> ${item.fundingAmount}
               </div>
-              <div class="funding-desc">${item.coverage}</div>
             </div>
 
             <!-- Target Levels -->
@@ -397,8 +644,8 @@
 
           <div class="card-footer">
             <div class="deadline-indicator">
-              <span class="deadline-label">Application Cycle</span>
-              <span class="deadline-val">📅 ${item.deadline}</span>
+              <span class="deadline-label">Deadline / Timeline</span>
+              <span class="deadline-val">📅 ${item.deadline || item.deadlineText}</span>
             </div>
 
             <div class="card-buttons">
@@ -415,9 +662,61 @@
     }).join('');
   }
 
-  // Open Full Detail Modal
+  // Render Providers Directory (Phase 4)
+  function renderProviders() {
+    const providersMap = new Map();
+
+    state.opportunities.forEach(it => {
+      const slug = it.provider.slug;
+      if (!providersMap.has(slug)) {
+        providersMap.set(slug, {
+          name: it.provider.name,
+          slug: it.provider.slug,
+          kind: it.provider.kind,
+          website: it.provider.website,
+          section: it.section,
+          opportunities: []
+        });
+      }
+      providersMap.get(slug).opportunities.push(it);
+    });
+
+    const providers = Array.from(providersMap.values()).filter(p => {
+      if (state.providerKind !== 'all' && p.kind !== state.providerKind) return false;
+      if (state.providerSearch.trim() !== '') {
+        const q = state.providerSearch.toLowerCase();
+        if (!p.name.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    }).sort((a, b) => a.name.localeCompare(b.name));
+
+    els.providersGrid.innerHTML = providers.map(p => `
+      <div class="provider-card">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <span class="badge ${p.section === 'india' ? 'badge-india' : 'badge-abroad'}">${p.section === 'india' ? '🇮🇳 India' : '🌍 Abroad'}</span>
+            <span class="badge badge-uni">${p.kind.toUpperCase()}</span>
+          </div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 6px;">${p.name}</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            ${p.opportunities.length} Total Verified Scheme(s) / Post(s)
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <a href="#/provider/${p.slug}" class="nav-btn primary" style="font-size: 0.82rem; flex: 1; text-align: center; justify-content: center;">
+            View All Opportunities (${p.opportunities.length})
+          </a>
+          <a href="${p.website}" target="_blank" rel="noopener noreferrer" class="nav-btn" style="font-size: 0.82rem;" title="Official Website">
+            Website ↗
+          </a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Open Full Detail Modal with Google Cal & .ics
   function openDetailModal(id) {
-    const item = OPPORTUNITIES_DATA.find(o => o.id === id);
+    const item = state.opportunities.find(o => o.id === id);
     if (!item) return;
 
     activeModalItem = item;
@@ -425,22 +724,23 @@
     // Badges
     const isIndia = item.section === 'india';
     els.modalBadgeGroup.innerHTML = `
-      <span class="badge ${isIndia ? 'badge-india' : 'badge-abroad'}">${isIndia ? '🇮🇳 India' : '🌍 Abroad'}</span>
-      <span class="badge ${item.type === 'government' ? 'badge-gov' : 'badge-pvt'}">${item.type === 'government' ? '🏛️ Govt Fund' : '💼 Private Trust'}</span>
+      <span class="badge ${isIndia ? 'badge-india' : 'badge-abroad'}">${isIndia ? '🇮🇳 India' : '🌍 ' + item.country}</span>
+      <span class="badge badge-gov">${item.type.toUpperCase()}</span>
       <span class="badge badge-intern">${item.category}</span>
+      <span class="badge badge-status-${item.status}">${item.status.toUpperCase()}</span>
     `;
 
     els.modalTitle.textContent = item.title;
-    els.modalAgency.textContent = item.fundingAgency;
+    els.modalAgency.textContent = item.provider.name;
     els.modalAmount.textContent = item.fundingAmount;
-    els.modalCoverage.textContent = item.coverage;
+    els.modalCoverage.textContent = `Provider Website: ${item.provider.website}`;
     els.modalEligibility.textContent = item.eligibility;
 
     // Levels & Streams
     els.modalLevels.innerHTML = item.educationLevel.map(l => `<span class="level-tag" style="font-size: 0.82rem; padding: 5px 12px;">${l}</span>`).join('');
     els.modalStreams.innerHTML = item.streams.map(s => `<span class="level-tag" style="font-size: 0.82rem; padding: 5px 12px; background: rgba(37, 99, 235, 0.08); color: var(--brand-primary);">${s}</span>`).join('');
 
-    // Document Checklist (Interactive)
+    // Document Checklist
     els.modalDocChecklist.innerHTML = item.documentsRequired.map((doc, idx) => `
       <label class="checklist-item" id="docLabel_${idx}">
         <input type="checkbox" onchange="this.parentElement.style.opacity = this.checked ? '0.6' : '1'">
@@ -456,14 +756,61 @@
       </div>
     `).join('');
 
-    // Deadline & Link
-    els.modalDeadline.textContent = `${item.deadline} (Peak Window)`;
+    // Deadline & Calendar Links (Phase 5)
+    els.modalDeadline.textContent = item.deadline ? `${item.deadline} (${item.deadlineText})` : item.deadlineText;
+    setupCalendarExports(item);
+
+    // Official and report broken links
     els.modalOfficialLink.href = item.officialLink;
+    const reportUrl = `https://github.com/mdsamhussain1996/vidyasetu-scholarship-portal/issues/new?template=report_broken_link.yml&title=%5BReport%5D+Issue+with+${encodeURIComponent(item.title)}&opportunity_id=${encodeURIComponent(item.id)}&current_link=${encodeURIComponent(item.officialLink)}`;
+    els.modalReportBrokenBtn.href = reportUrl;
 
     updateModalBookmarkBtn();
 
     els.detailModal.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // Update URL hash for sharing
+    window.location.hash = `/opportunity/${item.id}`;
+  }
+
+  function setupCalendarExports(item) {
+    if (!item.deadline) {
+      els.btnModalGoogleCal.style.display = 'none';
+      els.btnModalICS.style.display = 'none';
+      return;
+    }
+
+    els.btnModalGoogleCal.style.display = 'inline-flex';
+    els.btnModalICS.style.display = 'inline-flex';
+
+    // Google Calendar URL
+    const dateFormatted = item.deadline.replace(/-/g, '');
+    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Deadline: ' + item.title)}&dates=${dateFormatted}/${dateFormatted}&details=${encodeURIComponent('Official Application Link: ' + item.officialLink + '\n\nEligibility: ' + item.eligibility)}&location=${encodeURIComponent(item.provider.name)}`;
+    els.btnModalGoogleCal.href = gCalUrl;
+
+    // .ics file generator
+    els.btnModalICS.onclick = () => {
+      const icsData = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//VidyaSetu//Scholarship Deadlines//EN
+BEGIN:VEVENT
+SUMMARY:Application Deadline: ${item.title}
+DESCRIPTION:Official Portal: ${item.officialLink}\\n\\nProvider: ${item.provider.name}
+DTSTART;VALUE=DATE:${dateFormatted}
+DTEND;VALUE=DATE:${dateFormatted}
+LOCATION:${item.provider.name}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${item.id}-deadline.ics`;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
   }
 
   function updateModalBookmarkBtn() {
@@ -477,9 +824,43 @@
     els.detailModal.classList.remove('active');
     document.body.style.overflow = '';
     activeModalItem = null;
+    if (window.location.hash.startsWith('#/opportunity/')) {
+      window.location.hash = '';
+    }
   }
 
-  // Profile Matching Wizard Logic
+  // Hash Routing & Deep Linking (Phase 5)
+  function handleHashRouting() {
+    window.addEventListener('hashchange', checkHashDeepLink);
+  }
+
+  function checkHashDeepLink() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/opportunity/')) {
+      const oppId = hash.replace('#/opportunity/', '');
+      openDetailModal(oppId);
+    } else if (hash.startsWith('#/provider/')) {
+      const slug = hash.replace('#/provider/', '');
+      state.selectedProviderSlug = slug;
+      state.section = 'all';
+      updateSectionTabsUI();
+      renderCards();
+    } else if (hash === '#/providers') {
+      state.section = 'providers';
+      updateSectionTabsUI();
+      renderCards();
+    }
+  }
+
+  function updateSectionTabsUI() {
+    [els.tabSectionAll, els.tabSectionIndia, els.tabSectionAbroad, els.tabSectionProviders].forEach(t => t.classList.remove('active'));
+    if (state.section === 'india') els.tabSectionIndia.classList.add('active');
+    else if (state.section === 'abroad') els.tabSectionAbroad.classList.add('active');
+    else if (state.section === 'providers') els.tabSectionProviders.classList.add('active');
+    else els.tabSectionAll.classList.add('active');
+  }
+
+  // Profile Matching Wizard
   function openWizardModal() {
     els.wizardModal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -496,64 +877,91 @@
     const category = els.wizCategory.value;
     const destination = els.wizDestination.value;
 
-    // Set state
     state.level = level;
     els.filterLevel.value = level;
 
     if (stream !== 'All Disciplines') {
-      state.stream = stream;
-      els.filterStream.value = stream;
-    } else {
-      state.stream = 'all';
-      els.filterStream.value = 'all';
+      state.searchQuery = stream;
+      els.searchInput.value = stream;
     }
 
     if (destination !== 'all') {
-      setSection(destination);
+      state.section = destination;
     } else {
-      setSection('all');
+      state.section = 'all';
     }
 
     if (category === 'women') {
-      state.activeChip = 'women';
+      state.target = 'women';
+      els.filterTarget.value = 'women';
     } else if (category === 'means') {
-      state.searchQuery = 'income';
-      els.searchInput.value = 'income';
-    } else {
-      state.activeChip = null;
+      state.income = '450000';
+      els.filterIncome.value = '450000';
     }
 
-    updateChipsUI();
+    updateSectionTabsUI();
     closeWizardModal();
     renderCards();
-
-    // Scroll to results
     els.resultsCountText.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Section Tab Switcher
-  function setSection(sec) {
-    state.section = sec;
-    [els.tabSectionAll, els.tabSectionIndia, els.tabSectionAbroad].forEach(tab => {
-      tab.classList.remove('active');
+  // Dynamic Deadline Calendar (Phase 5)
+  function openCalendarModal() {
+    const quarters = { Q1: [], Q2: [], Q3: [], Q4: [] };
+
+    state.opportunities.forEach(it => {
+      const text = (it.deadline || it.deadlineText || '').toLowerCase();
+      if (text.includes('-01-') || text.includes('-02-') || text.includes('-03-') || text.includes('jan') || text.includes('feb') || text.includes('mar')) {
+        quarters.Q1.push(it);
+      } else if (text.includes('-04-') || text.includes('-05-') || text.includes('-06-') || text.includes('apr') || text.includes('may') || text.includes('jun')) {
+        quarters.Q2.push(it);
+      } else if (text.includes('-07-') || text.includes('-08-') || text.includes('-09-') || text.includes('jul') || text.includes('aug') || text.includes('sep')) {
+        quarters.Q3.push(it);
+      } else {
+        quarters.Q4.push(it);
+      }
     });
 
-    if (sec === 'india') {
-      els.tabSectionIndia.classList.add('active');
-    } else if (sec === 'abroad') {
-      els.tabSectionAbroad.classList.add('active');
-    } else {
-      els.tabSectionAll.classList.add('active');
-    }
+    els.dynamicCalendarGrid.innerHTML = `
+      <div class="detail-box">
+        <h4 style="color: #2563eb; margin-bottom: 8px;">❄️ Jan - Mar (Q1) - ${quarters.Q1.length} Schemes</h4>
+        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+          ${quarters.Q1.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="detail-box">
+        <h4 style="color: #059669; margin-bottom: 8px;">🌸 Apr - Jun (Q2) - ${quarters.Q2.length} Schemes</h4>
+        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+          ${quarters.Q2.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="detail-box">
+        <h4 style="color: #d97706; margin-bottom: 8px;">☀️ Jul - Sep (Q3) - ${quarters.Q3.length} Schemes</h4>
+        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+          ${quarters.Q3.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="detail-box">
+        <h4 style="color: #7c3aed; margin-bottom: 8px;">🍂 Oct - Dec (Q4) - ${quarters.Q4.length} Schemes</h4>
+        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
+          ${quarters.Q4.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+        </ul>
+      </div>
+    `;
 
-    renderCards();
+    els.calendarModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
 
-  // Comparison View
+  function closeCalendarModal() {
+    els.calendarModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  // Side-by-Side Comparison
   function openComparisonModal() {
     if (state.compare.length === 0) return;
-
-    const items = OPPORTUNITIES_DATA.filter(o => state.compare.includes(o.id));
+    const items = state.opportunities.filter(o => state.compare.includes(o.id));
 
     let html = `
       <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
@@ -563,8 +971,7 @@
             ${items.map(it => `
               <th style="padding: 14px; min-width: 240px; vertical-align: top;">
                 <div style="font-size: 1rem; font-weight: 700; margin-bottom: 6px;">${it.title}</div>
-                <span class="badge ${it.section === 'india' ? 'badge-india' : 'badge-abroad'}">${it.section === 'india' ? 'India' : 'Abroad'}</span>
-                <span class="badge badge-gov">${it.category}</span>
+                <span class="badge ${it.section === 'india' ? 'badge-india' : 'badge-abroad'}">${it.section === 'india' ? 'India' : it.country}</span>
               </th>
             `).join('')}
           </tr>
@@ -572,15 +979,11 @@
         <tbody>
           <tr style="border-bottom: 1px solid var(--border-color);">
             <td style="padding: 12px 14px; font-weight: 700;">Funding Agency</td>
-            ${items.map(it => `<td style="padding: 12px 14px;">${it.fundingAgency}</td>`).join('')}
+            ${items.map(it => `<td style="padding: 12px 14px;">${it.provider.name}</td>`).join('')}
           </tr>
           <tr style="border-bottom: 1px solid var(--border-color); background: rgba(37, 99, 235, 0.04);">
             <td style="padding: 12px 14px; font-weight: 700; color: var(--brand-primary);">Amount & Stipend</td>
             ${items.map(it => `<td style="padding: 12px 14px; font-weight: 700; color: var(--brand-primary);">${it.fundingAmount}</td>`).join('')}
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 12px 14px; font-weight: 700;">Coverage</td>
-            ${items.map(it => `<td style="padding: 12px 14px;">${it.coverage}</td>`).join('')}
           </tr>
           <tr style="border-bottom: 1px solid var(--border-color);">
             <td style="padding: 12px 14px; font-weight: 700;">Education Level</td>
@@ -592,7 +995,7 @@
           </tr>
           <tr style="border-bottom: 1px solid var(--border-color);">
             <td style="padding: 12px 14px; font-weight: 700;">Deadline</td>
-            ${items.map(it => `<td style="padding: 12px 14px; font-weight: 600;">${it.deadline}</td>`).join('')}
+            ${items.map(it => `<td style="padding: 12px 14px; font-weight: 600;">${it.deadline || it.deadlineText}</td>`).join('')}
           </tr>
           <tr>
             <td style="padding: 14px; font-weight: 700;">Official Link</td>
@@ -620,7 +1023,7 @@
 
   // Bookmarks Modal
   function openBookmarksModal() {
-    const list = OPPORTUNITIES_DATA.filter(o => state.bookmarks.includes(o.id));
+    const list = state.opportunities.filter(o => state.bookmarks.includes(o.id));
     if (list.length === 0) {
       els.bookmarksListBody.innerHTML = `
         <div style="text-align: center; padding: 40px 20px;">
@@ -635,7 +1038,7 @@
       els.bookmarksListBody.innerHTML = list.map(item => `
         <div class="detail-box" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
           <div style="flex: 1;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${item.fundingAgency}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${item.provider.name}</div>
             <h4 style="font-size: 1rem; margin: 2px 0 6px;">${item.title}</h4>
             <div style="font-size: 0.85rem; font-weight: 700; color: var(--brand-primary);">${item.fundingAmount}</div>
           </div>
@@ -660,105 +1063,128 @@
     document.body.style.overflow = '';
   }
 
-  // Calendar Modal
-  function openCalendarModal() {
-    els.calendarModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeCalendarModal() {
-    els.calendarModal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
   // Reset Filters
   function resetAllFilters() {
     state.searchQuery = '';
     state.level = 'all';
-    state.type = 'all';
+    state.status = 'all';
     state.category = 'all';
-    state.stream = 'all';
+    state.country = 'all';
+    state.stateFilter = 'all';
+    state.target = 'all';
+    state.income = 'all';
     state.sort = 'default';
     state.activeChip = null;
+    state.selectedProviderSlug = null;
 
     els.searchInput.value = '';
     els.filterLevel.value = 'all';
-    els.filterType.value = 'all';
+    els.filterStatus.value = 'all';
     els.filterCategory.value = 'all';
-    els.filterStream.value = 'all';
-    els.sortOrder.value = 'default';
+    els.filterCountry.value = 'all';
+    els.filterState.value = 'all';
+    els.filterTarget.value = 'all';
+    els.filterIncome.value = 'all';
 
-    updateChipsUI();
+    els.chips.forEach(c => c.classList.remove('active'));
     renderCards();
   }
 
-  function updateChipsUI() {
-    els.chips.forEach(chip => {
-      if (chip.getAttribute('data-chip') === state.activeChip) {
-        chip.classList.add('active');
-      } else {
-        chip.classList.remove('active');
-      }
-    });
-  }
-
-  // Event Bindings
+  // Event Listeners Binding
   function bindEvents() {
-    // Theme
     els.themeToggleBtn.addEventListener('click', toggleTheme);
+    els.langToggleBtn.addEventListener('click', toggleLanguage);
 
-    // Section switcher
-    els.tabSectionAll.addEventListener('click', () => setSection('all'));
-    els.tabSectionIndia.addEventListener('click', () => setSection('india'));
-    els.tabSectionAbroad.addEventListener('click', () => setSection('abroad'));
+    // Section tabs
+    els.tabSectionAll.addEventListener('click', () => {
+      state.section = 'all';
+      state.selectedProviderSlug = null;
+      updateSectionTabsUI();
+      renderCards();
+    });
+    els.tabSectionIndia.addEventListener('click', () => {
+      state.section = 'india';
+      state.selectedProviderSlug = null;
+      updateSectionTabsUI();
+      renderCards();
+    });
+    els.tabSectionAbroad.addEventListener('click', () => {
+      state.section = 'abroad';
+      state.selectedProviderSlug = null;
+      updateSectionTabsUI();
+      renderCards();
+    });
+    els.tabSectionProviders.addEventListener('click', () => {
+      state.section = 'providers';
+      updateSectionTabsUI();
+      renderCards();
+    });
 
-    // Search input
+    // Inputs
     els.searchInput.addEventListener('input', (e) => {
       state.searchQuery = e.target.value;
       renderCards();
     });
-
-    // Dropdowns
     els.filterLevel.addEventListener('change', (e) => {
       state.level = e.target.value;
       renderCards();
     });
-    els.filterType.addEventListener('change', (e) => {
-      state.type = e.target.value;
+    els.filterStatus.addEventListener('change', (e) => {
+      state.status = e.target.value;
       renderCards();
     });
     els.filterCategory.addEventListener('change', (e) => {
       state.category = e.target.value;
       renderCards();
     });
-    els.filterStream.addEventListener('change', (e) => {
-      state.stream = e.target.value;
+    els.filterCountry.addEventListener('change', (e) => {
+      state.country = e.target.value;
       renderCards();
     });
-    els.sortOrder.addEventListener('change', (e) => {
-      state.sort = e.target.value;
+    els.filterState.addEventListener('change', (e) => {
+      state.stateFilter = e.target.value;
       renderCards();
+    });
+    els.filterTarget.addEventListener('change', (e) => {
+      state.target = e.target.value;
+      renderCards();
+    });
+    els.filterIncome.addEventListener('change', (e) => {
+      state.income = e.target.value;
+      renderCards();
+    });
+
+    // Provider search & filter
+    els.providerSearchInput.addEventListener('input', (e) => {
+      state.providerSearch = e.target.value;
+      renderProviders();
+    });
+    els.providerKindFilter.addEventListener('change', (e) => {
+      state.providerKind = e.target.value;
+      renderProviders();
     });
 
     // Chips
     els.chips.forEach(chip => {
       chip.addEventListener('click', () => {
-        const chipVal = chip.getAttribute('data-chip');
-        if (state.activeChip === chipVal) {
+        const val = chip.getAttribute('data-chip');
+        if (state.activeChip === val) {
           state.activeChip = null;
+          chip.classList.remove('active');
         } else {
-          state.activeChip = chipVal;
+          els.chips.forEach(c => c.classList.remove('active'));
+          state.activeChip = val;
+          chip.classList.add('active');
         }
-        updateChipsUI();
         renderCards();
       });
     });
 
-    // Reset buttons
+    // Resets
     els.btnResetFilters.addEventListener('click', resetAllFilters);
     els.btnResetNoResults.addEventListener('click', resetAllFilters);
 
-    // View toggles
+    // View layout
     els.viewModeGrid.addEventListener('click', () => {
       state.viewMode = 'grid';
       els.viewModeGrid.classList.add('active');
@@ -772,15 +1198,13 @@
       renderCards();
     });
 
-    // Modal details
+    // Modals
     els.modalCloseBtn.addEventListener('click', closeDetailModal);
     els.detailModal.addEventListener('click', (e) => {
       if (e.target === els.detailModal) closeDetailModal();
     });
     els.modalBookmarkBtn.addEventListener('click', () => {
-      if (activeModalItem) {
-        toggleBookmark(activeModalItem.id);
-      }
+      if (activeModalItem) toggleBookmark(activeModalItem.id);
     });
 
     // Wizard
@@ -822,7 +1246,7 @@
       if (e.target === els.bookmarksModal) closeBookmarksModal();
     });
     els.btnClearAllBookmarks.addEventListener('click', () => {
-      if (confirm('Are you sure you want to remove all saved scholarships?')) {
+      if (confirm('Clear all saved scholarships?')) {
         state.bookmarks = [];
         localStorage.setItem('vidyasetu_bookmarks', '[]');
         updateBookmarkBadge();
@@ -831,7 +1255,7 @@
       }
     });
 
-    // Escape key closes modals
+    // Escape Key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDetailModal();
@@ -843,18 +1267,17 @@
     });
   }
 
-  // Expose global methods for inline card onclick handlers
+  // Global methods for inline handlers
   window.VidyaSetu = {
     openDetailModal,
     closeDetailModal,
     toggleBookmark,
     toggleCompare,
     openBookmarksModal,
-    closeBookmarksModal,
-    setSection
+    closeBookmarksModal
   };
 
-  // Run on DOM ready
+  // Run on ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

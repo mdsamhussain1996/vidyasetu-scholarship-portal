@@ -1,0 +1,41 @@
+name: "Report Broken or Outdated Link ⚠️"
+description: "Report a broken URL, expired application link, or incorrect details on VidyaSetu."
+title: "[Report]: "
+labels: ["broken-link", "data-fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help keep VidyaSetu 100% accurate! Please specify which opportunity has a broken link or outdated timeline.
+
+  - type: input
+    id: opportunity_id
+    attributes:
+      label: Opportunity ID or Title
+      placeholder: "e.g., dst-inspire-she or Prime Minister's Research Fellowship"
+    validations:
+      required: true
+
+  - type: input
+    id: current_link
+    attributes:
+      label: Current Broken URL
+      placeholder: "https://..."
+    validations:
+      required: false
+
+  - type: input
+    id: updated_link
+    attributes:
+      label: Correct / New Official URL (if you know it)
+      placeholder: "https://..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: issue_description
+    attributes:
+      label: What is wrong?
+      placeholder: "e.g., Link returns 404, or the portal URL changed to a new sub-domain, or the deadline has expired."
+    validations:
+      required: true

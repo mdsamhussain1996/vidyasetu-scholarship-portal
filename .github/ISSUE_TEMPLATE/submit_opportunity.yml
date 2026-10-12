@@ -1,0 +1,96 @@
+name: "Submit an Opportunity 🚀"
+description: "Submit a new scholarship, fellowship, funded project position, or internship for Indian students."
+title: "[Submission]: "
+labels: ["community-submission", "needs-verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping Indian students discover educational funding!
+        Please share verified official links only. VidyaSetu never lists scams or paid registration schemes.
+
+  - type: input
+    id: opportunity_title
+    attributes:
+      label: Opportunity Title
+      placeholder: "e.g., IIT Bombay Project JRF in Machine Learning"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Section
+      options:
+        - "India (Opportunities in India)"
+        - "Abroad (Opportunities Abroad)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - "Scholarship"
+        - "Fellowship"
+        - "Internship"
+        - "Research Project"
+        - "Project Position (JRF/SRF/RA)"
+        - "Fund/Grant"
+        - "Exchange"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: education_level
+    attributes:
+      label: Target Educational Level
+      options:
+        - label: "After 12th / Pre-College"
+        - label: "Bachelor's / UG Degree"
+        - label: "Master's / PG Degree"
+        - label: "PhD / Doctoral"
+        - label: "Postdoc"
+    validations:
+      required: true
+
+  - type: input
+    id: provider_name
+    attributes:
+      label: Funding Authority / Organization / University / Lab
+      placeholder: "e.g., Department of Science & Technology / IIT Madras / Tata Trusts"
+    validations:
+      required: true
+
+  - type: input
+    id: official_link
+    attributes:
+      label: Official Direct Link (Must be HTTPS)
+      placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: input
+    id: funding_amount
+    attributes:
+      label: Funding Amount & Benefits
+      placeholder: "e.g., ₹37,000/month + HRA or 100% Tuition Fee Waiver"
+    validations:
+      required: true
+
+  - type: input
+    id: deadline
+    attributes:
+      label: Application Deadline / Expected Cycle
+      placeholder: "e.g., 2026-12-15 or Rolling or Usually October"
+    validations:
+      required: false
+
+  - type: textarea
+    id: eligibility
+    attributes:
+      label: Key Eligibility Criteria
+      placeholder: "Who is eligible? (CGPA, marks percentage, streams, category, income limit)"
+    validations:
+      required: true

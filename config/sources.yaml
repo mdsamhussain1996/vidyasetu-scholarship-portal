@@ -1,0 +1,173 @@
+# VidyaSetu Daily Discovery Engine Configuration
+
+settings:
+  max_pages_per_run: 25
+  max_llm_calls_per_run: 10
+  request_timeout_seconds: 15
+  user_agent: "VidyaSetuBot/1.0 (+https://mdsamhussain1996.github.io/vidyasetu-scholarship-portal/)"
+  archive_closed_days_threshold: 60
+
+# Watched Official Source Pages
+watched_pages:
+  # Central Govt Ministries & Councils
+  - name: "National Scholarship Portal (NSP)"
+    url: "https://scholarships.gov.in"
+    kind: "ministry"
+    provider_slug: "moe-india"
+    section: "india"
+
+  - name: "Department of Science and Technology (DST) INSPIRE"
+    url: "https://online-inspire.gov.in"
+    kind: "ministry"
+    provider_slug: "dst-india"
+    section: "india"
+
+  - name: "Prime Minister's Research Fellowship (PMRF)"
+    url: "https://www.pmrf.in"
+    kind: "ministry"
+    provider_slug: "moe-india"
+    section: "india"
+
+  - name: "AICTE Student Development Schemes"
+    url: "https://www.aicte-india.org/schemes/students-development-schemes"
+    kind: "ministry"
+    provider_slug: "aicte-india"
+    section: "india"
+
+  - name: "CSIR Human Resource Development Group (HRDG)"
+    url: "https://csirhrdg.res.in"
+    kind: "ministry"
+    provider_slug: "csir-india"
+    section: "india"
+
+  - name: "SERB-ANRF Research Portals"
+    url: "https://serbonline.in"
+    kind: "ministry"
+    provider_slug: "anrf-india"
+    section: "india"
+
+  - name: "DBT-HRD Opportunities"
+    url: "https://dbtindia.gov.in"
+    kind: "ministry"
+    provider_slug: "dbt-india"
+    section: "india"
+
+  - name: "ICMR Research Fellowships"
+    url: "https://main.icmr.nic.in"
+    kind: "ministry"
+    provider_slug: "icmr-india"
+    section: "india"
+
+  # Premier Indian Universities & National Institutes
+  - name: "IISc Bengaluru Project Staff Openings"
+    url: "https://iisc.ac.in/careers/project-staff"
+    kind: "university"
+    provider_slug: "iisc-bengaluru"
+    section: "india"
+
+  - name: "IIT Madras Summer Fellowship Programme"
+    url: "https://sfp.iitm.ac.in"
+    kind: "university"
+    provider_slug: "iit-madras"
+    section: "india"
+
+  - name: "IIT Roorkee SPARK Portal"
+    url: "https://spark.iitr.ac.in"
+    kind: "university"
+    provider_slug: "iit-roorkee"
+    section: "india"
+
+  - name: "IIT Kanpur SURGE"
+    url: "https://www.iitk.ac.in/surge"
+    kind: "university"
+    provider_slug: "iit-kanpur"
+    section: "india"
+
+  - name: "IIT Gandhinagar SRIP"
+    url: "https://srip.iitgn.ac.in"
+    kind: "university"
+    provider_slug: "iit-gandhinagar"
+    section: "india"
+
+  - name: "Indian Academy of Sciences (IASc) Fellowship"
+    url: "https://web-japps.ias.ac.in"
+    kind: "lab"
+    provider_slug: "iasc-bangalore"
+    section: "india"
+
+  - name: "TIFR Visiting Students' Research Programme"
+    url: "https://www.tifr.res.in/~vsrp"
+    kind: "lab"
+    provider_slug: "tifr-mumbai"
+    section: "india"
+
+  # Philanthropic Foundations & CSR
+  - name: "Tata Trusts Education Grants"
+    url: "https://www.tatatrusts.org"
+    kind: "trust"
+    provider_slug: "tata-trusts"
+    section: "india"
+
+  - name: "Reliance Foundation Scholarships"
+    url: "https://www.scholarships.reliancefoundation.org"
+    kind: "company"
+    provider_slug: "reliance-foundation"
+    section: "india"
+
+  - name: "Kotak Education Foundation"
+    url: "https://kotakeducation.org"
+    kind: "trust"
+    provider_slug: "kotak-education-foundation"
+    section: "india"
+
+  # Global / Abroad Watchlist
+  - name: "Erasmus Mundus Catalogue (EACEA)"
+    url: "https://www.eacea.ec.europa.eu"
+    kind: "ministry"
+    provider_slug: "european-union-eacea"
+    section: "abroad"
+
+  - name: "Chevening Scholarships Portal"
+    url: "https://www.chevening.org"
+    kind: "ministry"
+    provider_slug: "uk-fcdo"
+    section: "abroad"
+
+  - name: "DAAD International Opportunities Database"
+    url: "https://www.daad.in"
+    kind: "ministry"
+    provider_slug: "daad-germany"
+    section: "abroad"
+
+  - name: "USIEF Fulbright-Nehru Fellowships"
+    url: "https://www.usief.org.in"
+    kind: "ministry"
+    provider_slug: "usief-india"
+    section: "abroad"
+
+  - name: "Mitacs Globalink Research Internship"
+    url: "https://www.mitacs.ca"
+    kind: "ministry"
+    provider_slug: "mitacs-canada"
+    section: "abroad"
+
+  - name: "CERN Summer Student Programmes"
+    url: "https://careers.cern"
+    kind: "lab"
+    provider_slug: "cern-geneva"
+    section: "abroad"
+
+# RSS / News Feeds
+rss_feeds:
+  - name: "Press Information Bureau (PIB) Ministry of Education"
+    url: "https://pib.gov.in/RssMain.aspx?ModId=6"
+    section: "india"
+
+# Pre-defined Search Queries for Discovery Pipeline
+search_queries:
+  - "scholarship for Indian students 2026 site:.gov.in"
+  - "JRF project position site:.ac.in"
+  - "fully funded PhD Indian applicants 2026"
+  - "summer research internship 2027 India"
+  - "postdoc fellowship India applicants site:.res.in"
+  - "Erasmus Mundus joint master degree India"

@@ -1,0 +1,29 @@
+name: "Validate Dataset Integrity"
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "data/**"
+      - "scripts/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "data/**"
+      - "scripts/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Integrity Validator
+        run: |
+          python scripts/validate.py
