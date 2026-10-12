@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VidyaSetu - National & International Opportunities Portal for Indian Students</title>
+  <meta name="description" content="Comprehensive portal for Indian students to discover Government funds, Private CSR scholarships, Internships and Research Fellowships in India and Abroad across 12th, Bachelor, Master, and PhD.">
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">🎓</div>
+        <div class="logo-text">
+          <h1>VidyaSetu</h1>
+          <p>National & Global Opportunities Portal</p>
+        </div>
+      </div>
+
+      <nav class="nav-actions">
+        <button id="btnOpenWizard" class="nav-btn primary">
+          <span>🎯</span> <span>Match My Profile</span>
+        </button>
+
+        <button id="btnOpenCalendar" class="nav-btn">
+          <span>📅</span> <span>Deadline Calendar</span>
+        </button>
+
+        <button id="btnSavedBookmarks" class="nav-btn">
+          <span>⭐</span> <span>Saved</span>
+          <span id="savedCountBadge" class="counter-badge">0</span>
+        </button>
+
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-tag">
+      <span>🚀</span> Empowering 12th Pass, Bachelor's, Master's & PhD Scholars Across India
+    </div>
+    <h1 class="hero-title">
+      Every Scholarship, Government Fund, Private Grant & Internship in One Place.
+    </h1>
+    <p class="hero-subtitle">
+      Verified national schemes from MoE, DST, AICTE, CSIR, top philanthropic trusts like Tata & Reliance, and fully funded global master's & doctoral fellowships in Europe, USA, UK, Canada & Japan.
+    </p>
+
+    <!-- Key Statistics Strip -->
+    <div class="metrics-strip">
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(249, 115, 22, 0.12); color: #ea580c;">🇮🇳</div>
+        <div>
+          <div class="metric-val" id="metricIndiaCount">--</div>
+          <div class="metric-label">Opportunities in India</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(2, 132, 199, 0.12); color: #0284c7;">🌍</div>
+        <div>
+          <div class="metric-val" id="metricAbroadCount">--</div>
+          <div class="metric-label">Opportunities Abroad</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">🏛️</div>
+        <div>
+          <div class="metric-val" id="metricGovCount">--</div>
+          <div class="metric-label">Government Funds</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(139, 92, 246, 0.12); color: #7c3aed;">💼</div>
+        <div>
+          <div class="metric-val" id="metricPvtCount">--</div>
+          <div class="metric-label">Private & CSR Funds</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">🔬</div>
+        <div>
+          <div class="metric-val" id="metricInternCount">--</div>
+          <div class="metric-label">Funded Internships</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 1 & Section 2 Main Switcher -->
+  <div class="section-switcher-container">
+    <div class="section-tabs-wrapper">
+      <button class="section-tab-btn active tab-all" data-section="all" id="tabSectionAll">
+        <span>🌐</span> All Opportunities
+        <span class="tab-badge" id="badgeAll">0</span>
+      </button>
+
+      <button class="section-tab-btn tab-india" data-section="india" id="tabSectionIndia">
+        <span>🇮🇳</span> SECTION 1: Opportunities in India
+        <span class="tab-badge" id="badgeIndia">0</span>
+      </button>
+
+      <button class="section-tab-btn tab-abroad" data-section="abroad" id="tabSectionAbroad">
+        <span>🌍</span> SECTION 2: Opportunities Abroad
+        <span class="tab-badge" id="badgeAbroad">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls -->
+  <section class="filter-container">
+    <div class="filter-glass-card">
+      
+      <!-- Top Search & Quick Wizard Row -->
+      <div class="search-row">
+        <div class="search-input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            class="search-input" 
+            placeholder="Search by scheme name, funding body (NSP, DST, Tata, DAAD), field of study or keyword..."
+          >
+        </div>
+
+        <button id="btnHeroWizard" class="wizard-quick-btn">
+          <span>✨</span> Find Eligible Scholarships
+        </button>
+      </div>
+
+      <!-- Secondary Filters Grid -->
+      <div class="filters-grid">
+        <!-- Education Level Filter -->
+        <div class="filter-group">
+          <label for="filterLevel">Education Level</label>
+          <select id="filterLevel" class="filter-select">
+            <option value="all">All Levels (12th to PhD)</option>
+            <option value="After 12th">After 12th / Pre-UG</option>
+            <option value="Bachelor">Bachelor's / UG Degree</option>
+            <option value="Master">Master's / PG Degree</option>
+            <option value="PhD">PhD & Doctoral</option>
+          </select>
+        </div>
+
+        <!-- Funding Type -->
+        <div class="filter-group">
+          <label for="filterType">Funding Authority</label>
+          <select id="filterType" class="filter-select">
+            <option value="all">All Authorities</option>
+            <option value="government">Government Scheme (Central/State)</option>
+            <option value="private">Private Trust / Corporate CSR</option>
+          </select>
+        </div>
+
+        <!-- Opportunity Category -->
+        <div class="filter-group">
+          <label for="filterCategory">Category</label>
+          <select id="filterCategory" class="filter-select">
+            <option value="all">All Categories</option>
+            <option value="Scholarship">Scholarship (Tuition & Living)</option>
+            <option value="Fellowship">Research Fellowship</option>
+            <option value="Internship">Funded Summer Internship</option>
+          </select>
+        </div>
+
+        <!-- Stream / Discipline -->
+        <div class="filter-group">
+          <label for="filterStream">Academic Stream</label>
+          <select id="filterStream" class="filter-select">
+            <option value="all">All Streams</option>
+            <option value="STEM">STEM & Technology</option>
+            <option value="Medicine">Medical & Life Sciences</option>
+            <option value="Humanities">Humanities & Social Sciences</option>
+            <option value="Commerce">Commerce & Management</option>
+          </select>
+        </div>
+
+        <!-- Sorting -->
+        <div class="filter-group">
+          <label for="sortOrder">Sort By</label>
+          <select id="sortOrder" class="filter-select">
+            <option value="default">Featured / Recommended</option>
+            <option value="amount-high">Highest Funding Amount</option>
+            <option value="title-asc">Alphabetical (A - Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="chips-row">
+        <span class="chips-label">Quick Filters:</span>
+        <button class="chip-btn" data-chip="after12">🎓 Passed 12th</button>
+        <button class="chip-btn" data-chip="bachelor">📚 Bachelor's (UG)</button>
+        <button class="chip-btn" data-chip="master">🎓 Master's (PG)</button>
+        <button class="chip-btn" data-chip="phd">🔬 PhD Fellowship</button>
+        <button class="chip-btn" data-chip="women">👩 Women / Girls Only</button>
+        <button class="chip-btn" data-chip="govt">🏛️ Govt DBT</button>
+        <button class="chip-btn" data-chip="abroad">🌍 Fully Funded Abroad</button>
+        <button class="chip-btn" data-chip="intern">💼 Summer Internships</button>
+
+        <button id="btnResetFilters" class="reset-filter-btn" title="Reset all applied filters">
+          <span>✕</span> Clear Filters
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Results Count & Active Filter Indicator -->
+  <div class="results-meta">
+    <div class="results-count" id="resultsCountText">
+      Showing <span>0</span> Opportunities
+    </div>
+    
+    <div class="view-controls">
+      <button class="view-mode-btn active" id="viewModeGrid" title="Grid View">🔲 Grid</button>
+      <button class="view-mode-btn" id="viewModeCompact" title="Compact View">☰ Compact</button>
+    </div>
+  </div>
+
+  <!-- Cards Grid View -->
+  <main class="cards-container" id="cardsGridContainer">
+    <!-- Opportunity Cards dynamically inserted by JavaScript -->
+  </main>
+
+  <!-- Empty State if no filters match -->
+  <div id="noResultsState" class="hero-section" style="display: none; padding: 40px 20px;">
+    <div style="font-size: 3rem; margin-bottom: 12px;">🔍</div>
+    <h3>No matching opportunities found</h3>
+    <p style="color: var(--text-secondary); max-width: 480px; margin: 8px auto 20px;">
+      Try adjusting your search criteria, education level or clearing selected filters.
+    </p>
+    <button id="btnResetNoResults" class="nav-btn primary">Reset All Filters</button>
+  </div>
+
+  <!-- Educational Guides Section for Indian Students -->
+  <section class="guides-section">
+    <div class="section-head">
+      <h2>Essential Guides & Preparation Resources</h2>
+      <p>Everything you need to successfully win national and international scholarships</p>
+    </div>
+
+    <div class="guides-grid">
+      <div class="guide-card">
+        <div class="guide-icon">📝</div>
+        <h3>How to Apply on National Scholarship Portal (NSP)</h3>
+        <p>Complete guide on One-Time Registration (OTR), linking Aadhaar to your bank account for Direct Benefit Transfer (DBT), and getting your bonafide certificate verified by college nodal officers.</p>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-icon">✈️</div>
+        <h3>Winning Global Scholarships (Erasmus, Chevening, DAAD)</h3>
+        <p>Mastering Statement of Purpose (SOP), securing strong letters of recommendation (LOR), converting CGPA to international scales, and preparing for embassy selection interviews.</p>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-icon">📄</div>
+        <h3>Mandatory Document Checklist for Indian Schemes</h3>
+        <p>Income certificate validity periods (issued by Tehsildar/Revenue officer), non-creamy layer OBC certificates, domicile certificates, and fee receipt formats needed for 100% claim success.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Floating Comparison Drawer -->
+  <div class="compare-drawer" id="compareDrawer">
+    <div>
+      <span class="compare-badge" id="compareBadgeCount">0</span>
+      <strong style="margin-left: 8px;">Opportunities Selected</strong>
+    </div>
+    <button class="nav-btn primary" id="btnLaunchComparison">
+      ⚖️ Compare Side-by-Side
+    </button>
+    <button class="reset-filter-btn" id="btnClearComparison">
+      Clear
+    </button>
+  </div>
+
+  <!-- FULL DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <div class="badge-group" id="modalBadgeGroup"></div>
+          <h2 id="modalTitle" style="font-size: 1.35rem; margin-top: 6px;">Title</h2>
+          <p id="modalAgency" style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Agency</p>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Funding & Benefits -->
+        <div>
+          <h4 class="detail-section-title">💰 Funding & Benefits Overview</h4>
+          <div class="detail-box" style="border-left: 4px solid var(--brand-primary);">
+            <div id="modalAmount" style="font-size: 1.15rem; font-weight: 800; color: var(--brand-primary); margin-bottom: 4px;"></div>
+            <div id="modalCoverage" style="color: var(--text-secondary);"></div>
+          </div>
+        </div>
+
+        <!-- Strict Eligibility -->
+        <div>
+          <h4 class="detail-section-title">📋 Eligibility Criteria</h4>
+          <div class="detail-box" id="modalEligibility"></div>
+        </div>
+
+        <!-- Education Level & Stream Tags -->
+        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <h5 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Target Educational Levels</h5>
+            <div id="modalLevels" class="levels-pills"></div>
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <h5 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Eligible Academic Streams</h5>
+            <div id="modalStreams" class="levels-pills"></div>
+          </div>
+        </div>
+
+        <!-- Document Checklist -->
+        <div>
+          <h4 class="detail-section-title">📁 Required Documents Checklist (Interactive)</h4>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">Check off the documents as you prepare your application file:</p>
+          <div id="modalDocChecklist" class="detail-box"></div>
+        </div>
+
+        <!-- Step-by-Step Application Process -->
+        <div>
+          <h4 class="detail-section-title">🚀 Step-by-Step Application Guide</h4>
+          <div id="modalApplicationSteps" class="detail-box"></div>
+        </div>
+
+        <!-- Deadline Notice -->
+        <div class="detail-box" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3);">
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--warning); margin-bottom: 4px;">
+            <span>⏳</span> Application Timeline & Expected Deadline:
+          </div>
+          <div id="modalDeadline" style="font-weight: 600; color: var(--text-primary);"></div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn" id="modalBookmarkBtn">⭐ Bookmark</button>
+        <a id="modalOfficialLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-apply-direct" style="padding: 10px 22px; font-size: 0.95rem;">
+          Visit Official Portal & Apply <span>↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE MATCHING WIZARD MODAL -->
+  <div class="modal-overlay" id="wizardModal">
+    <div class="modal-content" style="max-width: 640px;">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem;">🎯 Student Profile Matching Wizard</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Answer 4 quick questions to filter schemes custom-tailored to you</p>
+        </div>
+        <button class="modal-close-btn" id="wizardCloseBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Question 1: Education Level -->
+        <div>
+          <label style="font-weight: 700; font-size: 0.92rem; display: block; margin-bottom: 8px;">1. What is your current educational stage?</label>
+          <select id="wizLevel" class="filter-select" style="padding: 12px;">
+            <option value="After 12th">Completed / Appearing for Class 12 (Entering College)</option>
+            <option value="Bachelor">Currently pursuing Bachelor's Degree (B.Tech, B.Sc, BA, B.Com, MBBS)</option>
+            <option value="Master">Currently pursuing Master's Degree (M.Tech, M.Sc, MA, MBA, etc.)</option>
+            <option value="PhD">Pursuing or Planning for PhD / Doctoral Research</option>
+          </select>
+        </div>
+
+        <!-- Question 2: Academic Domain -->
+        <div>
+          <label style="font-weight: 700; font-size: 0.92rem; display: block; margin-bottom: 8px;">2. What is your major stream or field?</label>
+          <select id="wizStream" class="filter-select" style="padding: 12px;">
+            <option value="STEM">Science, Engineering, IT, Maths & Physical Sciences</option>
+            <option value="Medicine">Medical, Life Sciences & Pharmacy</option>
+            <option value="Humanities">Humanities, Social Sciences, Arts & Law</option>
+            <option value="Commerce">Commerce, Economics, Finance & Management</option>
+            <option value="All Disciplines">Any / General Stream</option>
+          </select>
+        </div>
+
+        <!-- Question 3: Preference / Target Category -->
+        <div>
+          <label style="font-weight: 700; font-size: 0.92rem; display: block; margin-bottom: 8px;">3. Special Category or Financial Background:</label>
+          <select id="wizCategory" class="filter-select" style="padding: 12px;">
+            <option value="all">Open / General Merit-based</option>
+            <option value="means">Family Income < ₹4.5 Lakh / ₹8.0 Lakh (Means-based)</option>
+            <option value="women">Female / Girl Student (Women specific quotas)</option>
+            <option value="reserved">SC / ST / OBC / Minority Category</option>
+          </select>
+        </div>
+
+        <!-- Question 4: Destination -->
+        <div>
+          <label style="font-weight: 700; font-size: 0.92rem; display: block; margin-bottom: 8px;">4. Destination Preference:</label>
+          <select id="wizDestination" class="filter-select" style="padding: 12px;">
+            <option value="all">Show both India & Abroad Opportunities</option>
+            <option value="india">Opportunities in India Only</option>
+            <option value="abroad">Opportunities Abroad Only</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn" id="btnCancelWizard">Cancel</button>
+        <button class="wizard-quick-btn" id="btnApplyWizard">
+          <span>✨</span> Generate Personalized Matches
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDE-BY-SIDE COMPARISON MODAL -->
+  <div class="modal-overlay" id="compareModal">
+    <div class="modal-content" style="max-width: 1080px;">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem;">⚖️ Side-by-Side Scheme Comparison</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Comparing funding amount, eligibility, and benefits</p>
+        </div>
+        <button class="modal-close-btn" id="compareCloseBtn">✕</button>
+      </div>
+
+      <div class="modal-body" style="overflow-x: auto;">
+        <div id="compareTableContainer">
+          <!-- Dynamic comparison table -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn" id="btnCloseCompareFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEADLINE CALENDAR MODAL -->
+  <div class="modal-overlay" id="calendarModal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem;">📅 Annual Scholarship & Internship Calendar</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Plan ahead so you never miss an application window</p>
+        </div>
+        <button class="modal-close-btn" id="calendarCloseBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+          
+          <!-- Quarter 1 -->
+          <div class="detail-box">
+            <h4 style="color: #2563eb; margin-bottom: 8px;">❄️ Jan - Mar (Q1)</h4>
+            <ul style="font-size: 0.85rem; padding-left: 18px; line-height: 1.7; color: var(--text-secondary);">
+              <li><strong>IIT Summer Internships (SPARK/SURGE):</strong> Jan - Mar</li>
+              <li><strong>TIFR VSRP:</strong> Jan - Feb</li>
+              <li><strong>JN Tata Endowment:</strong> Jan - Mar</li>
+              <li><strong>Inlaks Scholarships:</strong> Feb - Mar</li>
+              <li><strong>Narotam Sekhsaria:</strong> Jan - Mar</li>
+              <li><strong>Erasmus Mundus:</strong> Jan deadline</li>
+            </ul>
+          </div>
+
+          <!-- Quarter 2 -->
+          <div class="detail-box">
+            <h4 style="color: #059669; margin-bottom: 8px;">🌸 Apr - Jun (Q2)</h4>
+            <ul style="font-size: 0.85rem; padding-left: 18px; line-height: 1.7; color: var(--text-secondary);">
+              <li><strong>Fulbright-Nehru Fellowships:</strong> Closes May</li>
+              <li><strong>MEXT Japan Embassy Track:</strong> May - Jun</li>
+              <li><strong>CSIR-UGC NET (June cycle):</strong> May - Jun</li>
+              <li><strong>PMRF PhD (Cycle 1):</strong> May</li>
+            </ul>
+          </div>
+
+          <!-- Quarter 3 -->
+          <div class="detail-box">
+            <h4 style="color: #d97706; margin-bottom: 8px;">☀️ Jul - Sep (Q3)</h4>
+            <ul style="font-size: 0.85rem; padding-left: 18px; line-height: 1.7; color: var(--text-secondary);">
+              <li><strong>Reliance Foundation UG/PG:</strong> Aug - Oct</li>
+              <li><strong>Chevening UK:</strong> Opens Aug</li>
+              <li><strong>Mitacs Globalink (Canada):</strong> Aug - Sep</li>
+              <li><strong>SN Bose Scholars:</strong> Sep - Oct</li>
+              <li><strong>Aditya Birla Scholarships:</strong> Jul - Sep</li>
+            </ul>
+          </div>
+
+          <!-- Quarter 4 -->
+          <div class="detail-box">
+            <h4 style="color: #7c3aed; margin-bottom: 8px;">🍂 Oct - Dec (Q4)</h4>
+            <ul style="font-size: 0.85rem; padding-left: 18px; line-height: 1.7; color: var(--text-secondary);">
+              <li><strong>NSP Central Sector Scheme:</strong> Oct - Dec</li>
+              <li><strong>INSPIRE SHE (DST):</strong> Nov - Jan</li>
+              <li><strong>AICTE Pragati for Girls:</strong> Oct - Dec</li>
+              <li><strong>IASc-INSA Summer Fellowship:</strong> Closes Nov 30</li>
+              <li><strong>DAAD WISE & Study Grants:</strong> Oct - Nov</li>
+              <li><strong>CERN Summer Student:</strong> Nov - Jan</li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn primary" id="btnCloseCalendarFooter">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED / BOOKMARKS MODAL -->
+  <div class="modal-overlay" id="bookmarksModal">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem;">⭐ Saved Schemes & Opportunities</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Quickly review your bookmarked schemes</p>
+        </div>
+        <button class="modal-close-btn" id="bookmarksCloseBtn">✕</button>
+      </div>
+
+      <div class="modal-body" id="bookmarksListBody">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn" id="btnClearAllBookmarks">Clear All Saved</button>
+        <button class="nav-btn primary" id="btnCloseBookmarksFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="logo-group">
+          <div class="logo-icon">🎓</div>
+          <div class="logo-text">
+            <h1>VidyaSetu</h1>
+            <p>Direct Gateway to National & International Educational Funding</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <a href="https://scholarships.gov.in" target="_blank" rel="noopener noreferrer" class="nav-btn">
+            National Scholarship Portal (NSP) ↗
+          </a>
+          <a href="https://www.eacea.ec.europa.eu" target="_blank" rel="noopener noreferrer" class="nav-btn">
+            Erasmus Mundus Portal ↗
+          </a>
+          <a href="https://www.chevening.org" target="_blank" rel="noopener noreferrer" class="nav-btn">
+            Chevening UK ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          Dedicated to all Indian students (12th, UG, PG, PhD) seeking merit and need-based education funds.
+        </div>
+        <div>
+          Built with verified official links & DBT compliance guides • 2026
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
