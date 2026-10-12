@@ -1,0 +1,59 @@
+[
+  {
+    "id": "iit-delhi-project-associate-microfluidics",
+    "title": "Project Associate I - Microfluidic Lab-on-Chip Diagnostics for Point-of-Care Testing",
+    "section": "india",
+    "country": "India",
+    "state": "Delhi",
+    "type": "university",
+    "category": "Project Position (JRF/SRF/RA)",
+    "educationLevel": [
+      "Master"
+    ],
+    "streams": [
+      "Biotechnology",
+      "Mechanical Engineering",
+      "Chemical Engineering"
+    ],
+    "targetGroup": [
+      "All Candidates"
+    ],
+    "fundingAmount": "₹31,000/month + 27% HRA (₹35,000 with GATE/NET)",
+    "amountValINR": 39370,
+    "provider": {
+      "name": "Indian Institute of Technology Delhi (IRD)",
+      "kind": "university",
+      "slug": "iit-delhi",
+      "website": "https://home.iitd.ac.in"
+    },
+    "eligibility": "M.Tech in Biomedical / Chemical / Mechanical Engg with microfluidic chip fabrication experience.",
+    "incomeLimitINR": null,
+    "openDate": "2026-10-10",
+    "deadline": "2026-10-31",
+    "deadlineText": "Closes 31 Oct 2026",
+    "recurring": false,
+    "status": "open",
+    "officialLink": "https://ird.iitd.ac.in/vacancies",
+    "guidelinesLink": null,
+    "sourceUrl": "https://ird.iitd.ac.in/vacancies",
+    "documentsRequired": [
+      "CV",
+      "Transcripts",
+      "GATE/NET Scorecard"
+    ],
+    "applicationProcess": [
+      "Submit application to IRD recruitment office at IIT Delhi."
+    ],
+    "tags": [
+      "Project Associate",
+      "IIT Delhi",
+      "Microfluidics"
+    ],
+    "firstSeen": "2026-10-12",
+    "lastVerified": null,
+    "verifiedBy": "auto",
+    "confidence": 0.7,
+    "dateConfidence": "confirmed",
+    "evidence": "IIT Delhi IRD Microfluidics project vacancy circular closing 31 Oct 2026."
+  }
+]
