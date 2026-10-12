@@ -109,6 +109,8 @@
     metricGovCount: document.getElementById('metricGovCount'),
     metricPvtCount: document.getElementById('metricPvtCount'),
     metricInternCount: document.getElementById('metricInternCount'),
+    metricConfirmedCount: document.getElementById('metricConfirmedCount'),
+    metricExpectedCount: document.getElementById('metricExpectedCount'),
 
     // Section tabs
     tabSectionAll: document.getElementById('tabSectionAll'),
@@ -300,14 +302,108 @@
     applyLanguage(state.lang === 'en' ? 'hi' : 'en');
   }
 
-  // Metrics & Badges
+  // Status Badge Logic (Part 3)
+  function getStatusBadgeData(item) {
+    const today = new Date().toISOString().slice(0, 10);
+    const status = item.status;
+    const dc = item.dateConfidence || 'expected';
+    const openDate = item.openDate;
+    const deadline = item.deadline;
+    const dlText = item.deadlineText || 'Check official site';
+
+    // 1. Explicitly Closed
+    if (status === 'closed') {
+      return {
+        cssClass: 'badge-status-closed',
+        text: `Closed · next round expected ${dlText}`
+      };
+    }
+
+    // 2. Rolling
+    if (status === 'rolling') {
+      return {
+        cssClass: 'badge-status-rolling',
+        text: 'Rolling Applications'
+      };
+    }
+
+    // 3. Needs Review
+    if (status === 'needs-review') {
+      return {
+        cssClass: 'badge-status-needs-review',
+        text: '⚠️ Needs Review'
+      };
+    }
+
+    // 4. Confirmed dateConfidence
+    if (dc === 'confirmed') {
+      if (openDate && today < openDate) {
+        return {
+          cssClass: 'badge-status-upcoming',
+          text: `Opens ${openDate}`
+        };
+      }
+      if (deadline) {
+        if (today <= deadline) {
+          return {
+            cssClass: 'badge-status-open',
+            text: `Open · closes ${deadline}`
+          };
+        } else {
+          return {
+            cssClass: 'badge-status-closed',
+            text: `Closed · next round expected ${dlText}`
+          };
+        }
+      }
+      return {
+        cssClass: 'badge-status-open',
+        text: `Open · ${dlText}`
+      };
+    }
+
+    // 5. Expected dateConfidence (NEVER SHOW "Open")
+    if (dc === 'expected') {
+      return {
+        cssClass: 'badge-status-expected',
+        text: `Expected: ${dlText}`
+      };
+    }
+
+    // 6. Unknown dateConfidence
+    return {
+      cssClass: 'badge-status-unknown',
+      text: 'Check official site'
+    };
+  }
+
+  function renderStatusBadge(item) {
+    const badge = getStatusBadgeData(item);
+    return `<span class="badge ${badge.cssClass}">${badge.text}</span>`;
+  }
+
+  function getVerificationBadgeHtml(item) {
+    if (item.lastVerified) {
+      const today = new Date();
+      const verDate = new Date(item.lastVerified);
+      const diffDays = Math.max(0, Math.floor((today - verDate) / (1000 * 60 * 60 * 24)));
+      const text = diffDays === 0 ? 'Verified today' : `Verified ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+      return `<span class="verification-badge verified" title="Confirmed from official source on ${item.lastVerified}">✓ ${text}</span>`;
+    } else {
+      return `<span class="verification-badge unverified" title="Tentative schedule based on previous rounds. Check official site for current cycle.">⏳ Not yet verified for this cycle</span>`;
+    }
+  }
+
+  // Metrics & Badges (reads from meta.json when available)
   function updateMetrics() {
-    const total = state.opportunities.length;
-    const india = state.opportunities.filter(o => o.section === 'india').length;
-    const abroad = state.opportunities.filter(o => o.section === 'abroad').length;
-    const gov = state.opportunities.filter(o => o.type === 'government').length;
-    const pvt = state.opportunities.filter(o => o.type === 'private').length;
-    const intern = state.opportunities.filter(o => o.category === 'Internship').length;
+    const total = state.meta?.total ?? state.opportunities.length;
+    const india = state.meta?.india ?? state.opportunities.filter(o => o.section === 'india').length;
+    const abroad = state.meta?.abroad ?? state.opportunities.filter(o => o.section === 'abroad').length;
+    const gov = state.meta?.government ?? state.opportunities.filter(o => o.type === 'government').length;
+    const pvt = state.meta?.private ?? state.opportunities.filter(o => o.type === 'private').length;
+    const intern = state.meta?.internships ?? state.opportunities.filter(o => o.category === 'Internship').length;
+    const confCount = state.meta?.confirmedCount ?? state.opportunities.filter(o => o.dateConfidence === 'confirmed').length;
+    const expCount = state.meta?.expectedCount ?? state.opportunities.filter(o => o.dateConfidence === 'expected').length;
 
     // Unique providers count
     const providersSet = new Set(state.opportunities.map(o => o.provider.slug));
@@ -317,23 +413,27 @@
     els.metricGovCount.textContent = gov;
     els.metricPvtCount.textContent = pvt;
     els.metricInternCount.textContent = intern;
+    if (els.metricConfirmedCount) els.metricConfirmedCount.textContent = confCount;
+    if (els.metricExpectedCount) els.metricExpectedCount.textContent = expCount;
 
     els.badgeAll.textContent = total;
     els.badgeIndia.textContent = india;
     els.badgeAbroad.textContent = abroad;
     els.badgeProviders.textContent = providersSet.size;
 
-    // Meta verification badge
+    // Meta verification badge (Part 3)
     if (state.meta && state.meta.lastVerifiedDate) {
-      els.verifiedStatusBadge.innerHTML = `<span>✓</span> Verified ${state.meta.lastVerifiedDate} (${total} Schemes)`;
+      els.verifiedStatusBadge.innerHTML = `<span>✓</span> Verified ${state.meta.lastVerifiedDate} (${confCount} Confirmed · ${expCount} Expected)`;
+    } else {
+      els.verifiedStatusBadge.innerHTML = `<span>⏳</span> Not yet verified for this cycle`;
     }
   }
 
-  // Imminent Deadline / Closing Soon Strip (Phase 5)
+  // Imminent Deadline / Closing Soon Strip (Uses ONLY confirmed dates)
   function renderClosingSoonStrip() {
     const today = new Date().toISOString().slice(0, 10);
     const withDeadlines = state.opportunities
-      .filter(o => o.deadline && o.deadline >= today)
+      .filter(o => o.dateConfidence === 'confirmed' && o.deadline && o.deadline >= today)
       .sort((a, b) => a.deadline.localeCompare(b.deadline))
       .slice(0, 8);
 
@@ -342,6 +442,7 @@
       return;
     }
 
+    els.closingSoonStrip.style.display = 'block';
     els.closingSoonCarousel.innerHTML = withDeadlines.map(it => `
       <div class="closing-pill" onclick="window.VidyaSetu.openDetailModal('${it.id}')">
         <span>⏰ ${it.deadline}</span>: <strong>${it.title.slice(0, 32)}...</strong>
@@ -422,12 +523,25 @@
         return false;
       }
 
-      // 4. Status Filter
+      // 4. Status Filter (Honest filtering respecting dateConfidence)
       if (state.status !== 'all') {
-        if (state.status === 'closing-soon') {
-          if (!item.deadline || item.deadline < today) return false;
+        if (state.status === 'open') {
+          // Open now and confirmed
+          if (item.dateConfidence !== 'confirmed' || item.status !== 'open') return false;
+          if (item.deadline && item.deadline < today) return false;
+          if (item.openDate && item.openDate > today) return false;
+        } else if (state.status === 'closing-soon') {
+          if (item.dateConfidence !== 'confirmed' || !item.deadline || item.deadline < today) return false;
           const diffDays = (new Date(item.deadline) - new Date(today)) / (1000 * 60 * 60 * 24);
           if (diffDays > 30) return false;
+        } else if (state.status === 'upcoming') {
+          if (item.status !== 'upcoming' && !(item.openDate && item.openDate > today)) return false;
+        } else if (state.status === 'expected') {
+          if (item.dateConfidence !== 'expected') return false;
+        } else if (state.status === 'rolling') {
+          if (item.status !== 'rolling') return false;
+        } else if (state.status === 'closed') {
+          if (item.status !== 'closed' && (!item.deadline || item.deadline >= today)) return false;
         } else if (item.status !== state.status) {
           return false;
         }
@@ -587,7 +701,8 @@
         ? '<span class="badge badge-uni">🎓 University</span>'
         : '<span class="badge badge-pvt">💼 Private CSR</span>';
 
-      const statusBadge = `<span class="badge badge-status-${item.status}">${item.status.toUpperCase()}</span>`;
+      const statusBadge = renderStatusBadge(item);
+      const verBadge = getVerificationBadgeHtml(item);
       const levelPills = item.educationLevel.map(l => `<span class="level-tag">${l}</span>`).join('');
 
       return `
@@ -644,8 +759,9 @@
 
           <div class="card-footer">
             <div class="deadline-indicator">
-              <span class="deadline-label">Deadline / Timeline</span>
+              <span class="deadline-label">${item.dateConfidence === 'confirmed' ? 'Confirmed Deadline' : 'Expected Timeline'}</span>
               <span class="deadline-val">📅 ${item.deadline || item.deadlineText}</span>
+              ${verBadge}
             </div>
 
             <div class="card-buttons">
@@ -727,7 +843,8 @@
       <span class="badge ${isIndia ? 'badge-india' : 'badge-abroad'}">${isIndia ? '🇮🇳 India' : '🌍 ' + item.country}</span>
       <span class="badge badge-gov">${item.type.toUpperCase()}</span>
       <span class="badge badge-intern">${item.category}</span>
-      <span class="badge badge-status-${item.status}">${item.status.toUpperCase()}</span>
+      ${renderStatusBadge(item)}
+      ${getVerificationBadgeHtml(item)}
     `;
 
     els.modalTitle.textContent = item.title;
@@ -735,6 +852,45 @@
     els.modalAmount.textContent = item.fundingAmount;
     els.modalCoverage.textContent = `Provider Website: ${item.provider.website}`;
     els.modalEligibility.textContent = item.eligibility;
+
+    // Display Official Evidence Quote if confirmed
+    let evidenceBox = document.getElementById('modalEvidenceBox');
+    if (!evidenceBox) {
+      evidenceBox = document.createElement('div');
+      evidenceBox.id = 'modalEvidenceBox';
+      els.modalEligibility.parentElement.appendChild(evidenceBox);
+    }
+    if (item.evidence) {
+      evidenceBox.innerHTML = `
+        <div class="detail-box" style="border-left: 3px solid #10b981; margin-top: 14px; background: rgba(16, 185, 129, 0.05); padding: 12px; border-radius: 6px;">
+          <h4 style="color: #059669; margin-bottom: 6px; font-size: 0.85rem;">📋 Official Source Verification Evidence</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); font-style: italic; margin-bottom: 6px; line-height: 1.5;">"${item.evidence}"</p>
+          <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">Verified from official page: <a href="${item.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--brand-primary); word-break: break-all;">${item.sourceUrl}</a></p>
+        </div>
+      `;
+      evidenceBox.style.display = 'block';
+    } else {
+      evidenceBox.style.display = 'none';
+    }
+
+    // Guidelines link button
+    let guidelinesBtn = document.getElementById('modalGuidelinesLink');
+    if (!guidelinesBtn) {
+      guidelinesBtn = document.createElement('a');
+      guidelinesBtn.id = 'modalGuidelinesLink';
+      guidelinesBtn.className = 'nav-btn';
+      guidelinesBtn.target = '_blank';
+      guidelinesBtn.rel = 'noopener noreferrer';
+      guidelinesBtn.style.fontSize = '0.82rem';
+      guidelinesBtn.textContent = 'Guidelines PDF / Notice ↗';
+      els.modalOfficialLink.parentElement.insertBefore(guidelinesBtn, els.modalOfficialLink);
+    }
+    if (item.guidelinesLink) {
+      guidelinesBtn.href = item.guidelinesLink;
+      guidelinesBtn.style.display = 'inline-flex';
+    } else {
+      guidelinesBtn.style.display = 'none';
+    }
 
     // Levels & Streams
     els.modalLevels.innerHTML = item.educationLevel.map(l => `<span class="level-tag" style="font-size: 0.82rem; padding: 5px 12px;">${l}</span>`).join('');
@@ -905,17 +1061,20 @@ END:VCALENDAR`;
     els.resultsCountText.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Dynamic Deadline Calendar (Phase 5)
+  // Dynamic Deadline Calendar (Uses ONLY confirmed dates)
   function openCalendarModal() {
     const quarters = { Q1: [], Q2: [], Q3: [], Q4: [] };
 
-    state.opportunities.forEach(it => {
-      const text = (it.deadline || it.deadlineText || '').toLowerCase();
-      if (text.includes('-01-') || text.includes('-02-') || text.includes('-03-') || text.includes('jan') || text.includes('feb') || text.includes('mar')) {
+    // Part 3: Calendar must use only confirmed dates
+    const confirmedItems = state.opportunities.filter(it => it.dateConfidence === 'confirmed' && it.deadline);
+
+    confirmedItems.forEach(it => {
+      const text = it.deadline;
+      if (text.includes('-01-') || text.includes('-02-') || text.includes('-03-')) {
         quarters.Q1.push(it);
-      } else if (text.includes('-04-') || text.includes('-05-') || text.includes('-06-') || text.includes('apr') || text.includes('may') || text.includes('jun')) {
+      } else if (text.includes('-04-') || text.includes('-05-') || text.includes('-06-')) {
         quarters.Q2.push(it);
-      } else if (text.includes('-07-') || text.includes('-08-') || text.includes('-09-') || text.includes('jul') || text.includes('aug') || text.includes('sep')) {
+      } else if (text.includes('-07-') || text.includes('-08-') || text.includes('-09-')) {
         quarters.Q3.push(it);
       } else {
         quarters.Q4.push(it);
@@ -923,28 +1082,31 @@ END:VCALENDAR`;
     });
 
     els.dynamicCalendarGrid.innerHTML = `
+      <div style="grid-column: 1 / -1; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); padding: 8px 12px; background: rgba(37, 99, 235, 0.06); border-radius: 6px;">
+        📅 Showing <strong>${confirmedItems.length} schemes with confirmed application deadlines</strong> for current rounds. Unconfirmed/expected rounds are omitted from calendar alerts until dates are officially published.
+      </div>
       <div class="detail-box">
-        <h4 style="color: #2563eb; margin-bottom: 8px;">❄️ Jan - Mar (Q1) - ${quarters.Q1.length} Schemes</h4>
+        <h4 style="color: #2563eb; margin-bottom: 8px;">❄️ Jan - Mar (Q1) - ${quarters.Q1.length} Confirmed Schemes</h4>
         <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q1.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+          ${quarters.Q1.length ? quarters.Q1.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
         </ul>
       </div>
       <div class="detail-box">
-        <h4 style="color: #059669; margin-bottom: 8px;">🌸 Apr - Jun (Q2) - ${quarters.Q2.length} Schemes</h4>
+        <h4 style="color: #059669; margin-bottom: 8px;">🌸 Apr - Jun (Q2) - ${quarters.Q2.length} Confirmed Schemes</h4>
         <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q2.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+          ${quarters.Q2.length ? quarters.Q2.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
         </ul>
       </div>
       <div class="detail-box">
-        <h4 style="color: #d97706; margin-bottom: 8px;">☀️ Jul - Sep (Q3) - ${quarters.Q3.length} Schemes</h4>
+        <h4 style="color: #d97706; margin-bottom: 8px;">☀️ Jul - Sep (Q3) - ${quarters.Q3.length} Confirmed Schemes</h4>
         <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q3.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+          ${quarters.Q3.length ? quarters.Q3.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
         </ul>
       </div>
       <div class="detail-box">
-        <h4 style="color: #7c3aed; margin-bottom: 8px;">🍂 Oct - Dec (Q4) - ${quarters.Q4.length} Schemes</h4>
+        <h4 style="color: #7c3aed; margin-bottom: 8px;">🍂 Oct - Dec (Q4) - ${quarters.Q4.length} Confirmed Schemes</h4>
         <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q4.slice(0, 10).map(it => `<li><strong>${it.title.slice(0, 30)}...:</strong> ${it.deadline || it.deadlineText}</li>`).join('')}
+          ${quarters.Q4.length ? quarters.Q4.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
         </ul>
       </div>
     `;

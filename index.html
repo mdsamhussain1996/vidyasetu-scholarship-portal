@@ -152,6 +152,22 @@
           <div class="metric-label" id="lblMetricIntern">Funded Internships</div>
         </div>
       </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">✓</div>
+        <div>
+          <div class="metric-val" id="metricConfirmedCount">--</div>
+          <div class="metric-label" id="lblMetricConfirmed">Confirmed Dates</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon" style="background: rgba(107, 114, 128, 0.12); color: #6b7280;">⏳</div>
+        <div>
+          <div class="metric-val" id="metricExpectedCount">--</div>
+          <div class="metric-label" id="lblMetricExpected">Expected Cycle</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -225,10 +241,12 @@
           <label for="filterStatus" id="lblFilterStatus">Status</label>
           <select id="filterStatus" class="filter-select">
             <option value="all">All Statuses</option>
-            <option value="open">🟢 Open Now</option>
+            <option value="open">🟢 Open Now (Confirmed)</option>
             <option value="closing-soon">⏳ Closing in 30 Days</option>
-            <option value="upcoming">🔵 Upcoming / Next Cycle</option>
+            <option value="upcoming">🔵 Opens Soon / Upcoming</option>
+            <option value="expected">⚪ Expected / Tentative</option>
             <option value="rolling">🟣 Rolling / Round Year</option>
+            <option value="closed">🔴 Closed Cycles</option>
           </select>
         </div>
 
