@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-10-12T15:55:00",
+  "lastRun": "2026-10-12T16:08:42.904047",
   "lastVerifiedDate": "2026-10-12",
   "total": 187,
   "india": 126,
@@ -11,15 +11,15 @@
   "fellowships": 27,
   "scholarships": 81,
   "projectPositions": 33,
-  "confirmedCount": 51,
-  "expectedCount": 136,
+  "confirmedCount": 48,
+  "expectedCount": 139,
   "pendingReviewCount": 0,
   "archivedCount": 0,
   "brokenLinks": 0,
-  "addedLastRun": 32,
-  "updatedLastRun": 51,
+  "addedLastRun": 0,
+  "updatedLastRun": 3,
   "archivedLastRun": 0,
-  "checkedSourcesCount": 28,
-  "changedSourcesCount": 6,
+  "checkedSourcesCount": 30,
+  "changedSourcesCount": 15,
   "confidenceAverage": 0.61
 }

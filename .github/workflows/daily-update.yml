@@ -25,31 +25,44 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Run Discovery & Verification Engine
+      - name: Compute Current Date
+        id: get-date
         run: |
-          python scripts/discover.py
+          echo "date=$(date +%F)" >> $GITHUB_OUTPUT
 
-      - name: Validate Dataset Integrity
+      - name: Run Discovery & Verification Engine
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # If Sunday, include link health check
+          if [ "$(date +%u)" = "7" ]; then
+            python scripts/discover.py --check-links
+          else
+            python scripts/discover.py
+          fi
+
+      - name: Validate Dataset Integrity Before Commit
+        id: validate
         run: |
           python scripts/validate.py
 
-      - name: Check for modified files
+      - name: Check for modified files to commit to main
         id: git-check
         run: |
-          git status --porcelain
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+          git status --porcelain data/opportunities.json data/meta.json data/source_hashes.json data/archive.json
+          if [ -n "$(git status --porcelain data/opportunities.json data/meta.json data/source_hashes.json data/archive.json)" ]; then
+            echo "has_main_changes=true" >> $GITHUB_OUTPUT
           else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_main_changes=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit & Push Verified Updates
-        if: steps.git-check.outputs.has_changes == 'true'
+      - name: Commit & Push Verified Updates to Main
+        if: steps.git-check.outputs.has_main_changes == 'true' && steps.validate.outcome == 'success'
         run: |
           git config user.name "VidyaSetu Automation Bot"
           git config user.email "actions@github.com"
-          git add data/
-          git commit -m "chore(data): automated daily opportunities update [$(date +'%Y-%m-%d')]"
+          git add data/opportunities.json data/meta.json data/source_hashes.json data/archive.json
+          git commit -m "chore(data): automated daily opportunities update [${{ steps.get-date.outputs.date }}]"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,14 +81,15 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "feat(data): new opportunities submitted for human review"
-          title: "New opportunities for review – $(date +'%Y-%m-%d')"
+          commit-message: "feat(data): new opportunities submitted for human review [${{ steps.get-date.outputs.date }}]"
+          title: "New opportunities for review – ${{ steps.get-date.outputs.date }}"
           body: |
-            ### Automated Discovery Review Required
+            ### Automated Discovery Review Required (${{ steps.get-date.outputs.date }})
             New educational opportunities were scraped or submitted and placed in `data/pending.json` for human verification.
             
             - Please verify official provider authenticity.
-            - Ensure no registration fee is demanded.
+            - Ensure no registration fee or payment is demanded.
             - Once approved, merge this PR to add them to `data/opportunities.json`.
-          branch: "auto-update/pending-review-$(date +'%Y-%m-%d')"
+          branch: "auto-update/pending-review-${{ steps.get-date.outputs.date }}"
+          add-paths: "data/pending.json"
           delete-branch: true

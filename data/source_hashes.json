@@ -1,6 +1,6 @@
 {
-  "https://scholarships.gov.in": "e09ae0f267c7b93a11d629a4c989a9e3a62e411f4fcc0d8fe64721fb202bd026",
-  "https://online-inspire.gov.in": "4db1eff261283bb65d80c9693cb551c25b1fadc156a99ab0e8bbe7958fd06ce2",
+  "https://scholarships.gov.in": "7ac34b782be642dca4dc1257c95748f77881cfc137856673fca004a675b8accc",
+  "https://online-inspire.gov.in": "62a6dc01dc05f136ce4430b0dcbd8d7ae8dbb0de02804c8c5fb176fd718a26e6",
   "https://www.aicte-india.org/schemes/students-development-schemes": "17b67f6033958c0879fd751f2ee730b9e472dc2939ec17d7596b1d877bcce3a4",
   "https://csirhrdg.res.in": "cffedc831e55ef61fbbf733e8c6a54da20eff7a0a27859e9c82d70862a4bcba6",
   "https://serbonline.in": "a47397705ff75650be8862ed60d63747583db22e2c313b83dbed44de5e35cd8d",
@@ -15,5 +15,18 @@
   "https://www.usief.org.in": "1a32133c868363d75cf5785a085038f1ccf12f47efc83d5d1b2749042ce428dd",
   "https://www.mitacs.ca": "1369e0f2248d7c72d637c83ad71fc89c56593d91f461f456ca5254b9be98385b",
   "https://careers.cern": "e043f1d9353b795d97398d39eb307dfd876b79db9d5e7bbc4ec597533efcad2b",
-  "https://srip.iitgn.ac.in": "2d1a2a00629a76159e502e4602b24b26dea574d0bb9aa1125a8ec08f91e3e5ef"
+  "https://srip.iitgn.ac.in": "2d1a2a00629a76159e502e4602b24b26dea574d0bb9aa1125a8ec08f91e3e5ef",
+  "https://anrfonline.in": "0d9cebbd98d25f6343e0b1a3be23af9de7571a511a6e679b0b05cde60e8e99f1",
+  "https://iisc.ac.in/positions-open/": "b87af92435a4232f28baaa29de4f272da651bfc4cb3650608636b73ba89df7ca",
+  "https://ird.iitd.ac.in/vacancies": "90c901782f01eda36aa0206d10a5756bc0a5e77d30afafacc52eb0e228c63d28",
+  "https://icandsr.iitm.ac.in/recruitment/": "75a05fc90f256bbe476f515e337cda1e54ee00b0b24d30bbca12176f2c98da00",
+  "https://erp.iitkgp.ac.in/SRICStaffRecruitment/": "3b50c671b335029a71130cdaa81b16519560284b9568bdfc4e53871dc84f3ced",
+  "https://iitr.ac.in/Careers/Project%20Jobs.html": "ed4fee42740c90118178c86bed246ff988ee43a57f27397be239090914d8466b",
+  "https://www.iitk.ac.in/dord/project-vacancies": "904ddda81467a297b235c5e74a46225c24d4d0c33ec1e6d76cd6f996c07ff52c",
+  "https://www.iiserkol.ac.in/web/en/announcements/vacancies/": "6f31a8e8d9447f013c9eac9b4630451421f423b629a75e98f6a53166b3aeda54",
+  "https://www.nitt.edu/home/other/jobs/": "7756c7c084644c8060f3569c200e500df9cc11495a3fd6c51236784a42fcc8f4",
+  "https://www.tatatrusts.org/our-work/individual-grants-programme/education-grants": "72bf8c02ad1f994b46b9bdac35662246cdbe40ca7a9c77bb35b566f72ba8648a",
+  "https://kotakeducation.org/kotak-kanya-scholarship/": "6dc9c7fc93bb488bb0520a6c780a8d3c0fb5486a4711aca49b4c53fac7393023",
+  "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en": "861c840b8dbb9beff46e5ebdd4532c0d084a28c3304eef8d968786e1a6957abc",
+  "https://www.chevening.org/scholarship/india/": "a4f9890bb16fa3ca854401f0b7419754317a91f569f1e3d49fc5c46e1d7783b2"
 }

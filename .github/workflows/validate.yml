@@ -6,11 +6,13 @@ on:
     paths:
       - "data/**"
       - "scripts/**"
+      - "tests/**"
   pull_request:
     branches: ["main"]
     paths:
       - "data/**"
       - "scripts/**"
+      - "tests/**"
 
 jobs:
   validate:
@@ -27,3 +29,7 @@ jobs:
       - name: Run Integrity Validator
         run: |
           python scripts/validate.py
+
+      - name: Run Unit Tests
+        run: |
+          python -m unittest discover tests
