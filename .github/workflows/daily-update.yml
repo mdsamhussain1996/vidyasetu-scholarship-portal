@@ -50,7 +50,7 @@ jobs:
         id: git-check
         run: |
           git status --porcelain data/opportunities.json data/meta.json data/source_hashes.json data/archive.json
-          if [ -n "$(git status --porcelain data/opportunities.json data/meta.json data/source_hashes.json data/archive.json)" ]; then
+          if [ -n "$(git status --porcelain data/opportunities.json data/meta.json data/source_hashes.json data/archive.json 2>/dev/null)" ]; then
             echo "has_main_changes=true" >> $GITHUB_OUTPUT
           else
             echo "has_main_changes=false" >> $GITHUB_OUTPUT
@@ -61,7 +61,8 @@ jobs:
         run: |
           git config user.name "VidyaSetu Automation Bot"
           git config user.email "actions@github.com"
-          git add data/opportunities.json data/meta.json data/source_hashes.json data/archive.json
+          git add data/opportunities.json data/meta.json data/source_hashes.json
+          if [ -f data/archive.json ]; then git add data/archive.json; fi
           git commit -m "chore(data): automated daily opportunities update [${{ steps.get-date.outputs.date }}]"
           git push origin main
         env:
