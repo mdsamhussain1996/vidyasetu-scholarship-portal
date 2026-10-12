@@ -40,8 +40,11 @@ VALID_STATUSES = {"open", "upcoming", "closed", "rolling", "needs-review"}
 VALID_PROVIDER_KINDS = {"ministry", "company", "trust", "university", "lab", "professor"}
 VALID_VERIFIED_BY = {"human", "auto"}
 
+VALID_DATE_CONFIDENCE = {"confirmed", "expected", "unknown"}
+
 def validate_entry(entry, index, seen_ids):
     errors = []
+    warnings = []
     
     # 1. Check ID
     item_id = entry.get("id")
@@ -100,6 +103,7 @@ def validate_entry(entry, index, seen_ids):
         
     # 7. Provider object
     provider = entry.get("provider")
+    p_web = None
     if not isinstance(provider, dict):
         errors.append(f"Item '{item_id}': provider must be an object with name, kind, slug, website")
     else:
@@ -140,10 +144,22 @@ def validate_entry(entry, index, seen_ids):
     if status not in VALID_STATUSES:
         errors.append(f"Item '{item_id}': status must be one of {VALID_STATUSES}, got '{status}'")
 
-    # 10. Links - STRICT HTTPS ENFORCEMENT
+    # 10. Links - STRICT HTTPS ENFORCEMENT & Quality Warnings
     official = entry.get("officialLink")
     if not official or not isinstance(official, str) or not official.startswith("https://"):
         errors.append(f"Item '{item_id}': officialLink MUST start with https://, got '{official}'")
+    else:
+        # Check path emptiness or equality with provider website
+        from urllib.parse import urlparse
+        parsed = urlparse(official)
+        if parsed.path in ("", "/"):
+            warnings.append(f"Item '{item_id}': officialLink '{official}' has an empty path (homepage). Consider linking to scheme specific page.")
+        if p_web and official.rstrip("/") == p_web.rstrip("/"):
+            warnings.append(f"Item '{item_id}': officialLink equals provider.website '{official}'. Consider linking to scheme specific page.")
+
+    guidelines_link = entry.get("guidelinesLink")
+    if guidelines_link is not None and (not isinstance(guidelines_link, str) or not guidelines_link.startswith("https://")):
+        errors.append(f"Item '{item_id}': guidelinesLink must be null or start with https://, got '{guidelines_link}'")
 
     source_url = entry.get("sourceUrl")
     if not source_url or not isinstance(source_url, str) or not source_url.startswith("https://"):
@@ -163,8 +179,8 @@ def validate_entry(entry, index, seen_ids):
         errors.append(f"Item '{item_id}': firstSeen must be 'YYYY-MM-DD'")
 
     last_verified = entry.get("lastVerified")
-    if not last_verified or not DATE_REGEX.match(last_verified):
-        errors.append(f"Item '{item_id}': lastVerified must be 'YYYY-MM-DD'")
+    if last_verified is not None and (not isinstance(last_verified, str) or not DATE_REGEX.match(last_verified)):
+        errors.append(f"Item '{item_id}': lastVerified must be 'YYYY-MM-DD' or null, got '{last_verified}'")
 
     verified_by = entry.get("verifiedBy")
     if verified_by not in VALID_VERIFIED_BY:
@@ -174,12 +190,16 @@ def validate_entry(entry, index, seen_ids):
     if confidence is None or not isinstance(confidence, (int, float)) or not (0.0 <= confidence <= 1.0):
         errors.append(f"Item '{item_id}': confidence must be a number between 0.0 and 1.0, got '{confidence}'")
 
-    return errors
+    date_confidence = entry.get("dateConfidence")
+    if date_confidence not in VALID_DATE_CONFIDENCE:
+        errors.append(f"Item '{item_id}': dateConfidence must be one of {VALID_DATE_CONFIDENCE}, got '{date_confidence}'")
+
+    return errors, warnings
 
 def validate_file(file_path):
     if not file_path.exists():
         print(f"File {file_path.name} does not exist, skipping.")
-        return 0, 0
+        return 0, 0, 0
     
     print(f"\n--- Validating {file_path.name} ---")
     try:
@@ -187,19 +207,44 @@ def validate_file(file_path):
             data = json.load(f)
     except Exception as e:
         print(f"ERROR: Failed to parse JSON from {file_path}: {e}")
-        return 1, 0
+        return 1, 0, 0
 
     if not isinstance(data, list):
         print(f"ERROR: {file_path.name} root must be a JSON array, got {type(data).__name__}")
-        return 1, 0
+        return 1, 0, 0
 
     seen_ids = set()
     total_errors = []
+    total_warnings = []
+    shared_official_links = {}
 
     for idx, entry in enumerate(data):
-        errs = validate_entry(entry, idx, seen_ids)
+        errs, warns = validate_entry(entry, idx, seen_ids)
         if errs:
             total_errors.extend(errs)
+        if warns:
+            total_warnings.extend(warns)
+
+        # Track shared official links without guidelinesLink
+        off_link = entry.get("officialLink")
+        g_link = entry.get("guidelinesLink")
+        item_id = entry.get("id")
+        if off_link and not g_link:
+            shared_official_links.setdefault(off_link, []).append(item_id)
+
+    # Detect shared links
+    for link, item_ids in shared_official_links.items():
+        if len(item_ids) > 1:
+            total_warnings.append(
+                f"Multiple schemes ({', '.join(item_ids[:3])}{'...' if len(item_ids) > 3 else ''}) share officialLink '{link}' without individual guidelinesLink."
+            )
+
+    if total_warnings:
+        print(f"WARNINGS: {len(total_warnings)} advisory link quality warnings in {file_path.name}:")
+        for w in total_warnings[:10]:
+            print(f"  ⚠️  {w}")
+        if len(total_warnings) > 10:
+            print(f"  ... and {len(total_warnings) - 10} more warnings.")
 
     if total_errors:
         print(f"FAILED: Found {len(total_errors)} validation errors in {file_path.name}:")
@@ -207,18 +252,18 @@ def validate_file(file_path):
             print(f"  ❌ {err}")
         if len(total_errors) > 20:
             print(f"  ... and {len(total_errors) - 20} more errors.")
-        return len(total_errors), len(data)
+        return len(total_errors), len(total_warnings), len(data)
     else:
         print(f"PASSED: All {len(data)} entries in {file_path.name} are valid and HTTPS compliant!")
-        return 0, len(data)
+        return 0, len(total_warnings), len(data)
 
 def main():
     print("VidyaSetu Dataset Integrity Validator")
     print(f"Schema: {SCHEMA_FILE}")
 
-    errors_main, count_main = validate_file(OPPORTUNITIES_FILE)
-    errors_pending, _ = validate_file(PENDING_FILE)
-    errors_archive, _ = validate_file(ARCHIVE_FILE)
+    errors_main, warns_main, count_main = validate_file(OPPORTUNITIES_FILE)
+    errors_pending, _, _ = validate_file(PENDING_FILE)
+    errors_archive, _, _ = validate_file(ARCHIVE_FILE)
 
     total_errors = errors_main + errors_pending + errors_archive
 

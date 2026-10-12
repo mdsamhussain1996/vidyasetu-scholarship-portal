@@ -1,0 +1,83 @@
+# Pre-defined Search Queries for VidyaSetu Daily Discovery Engine
+# Rotated through by scripts/discover.py so each runs at least weekly
+
+queries:
+  # Scholarships (National & Central)
+  - query: "scholarship for Indian students 2026 site:.gov.in"
+    category: "Scholarship"
+    section: "india"
+    frequency: "daily"
+
+  - query: "NSP new scholarship portal 2026 guidelines"
+    category: "Scholarship"
+    section: "india"
+    frequency: "daily"
+
+  # Project Positions & Lab Openings
+  - query: "project JRF IIT 2026 advertisement fellowship"
+    category: "Project Position (JRF/SRF/RA)"
+    section: "india"
+    frequency: "daily"
+
+  - query: "project associate IISc Bengaluru recruitment 2026"
+    category: "Project Position (JRF/SRF/RA)"
+    section: "india"
+    frequency: "daily"
+
+  - query: "CSIR lab JRF recruitment project staff 2026"
+    category: "Project Position (JRF/SRF/RA)"
+    section: "india"
+    frequency: "daily"
+
+  - query: "SRF project position IISER 2026"
+    category: "Project Position (JRF/SRF/RA)"
+    section: "india"
+    frequency: "daily"
+
+  # Fellowships & Postdocs
+  - query: "fully funded PhD for Indian students 2027"
+    category: "Fellowship"
+    section: "abroad"
+    frequency: "weekly"
+
+  - query: "postdoctoral fellowship India applicants ANRF 2026"
+    category: "Fellowship"
+    section: "india"
+    frequency: "weekly"
+
+  # Summer Research Internships
+  - query: "summer research internship 2027 India undergraduates"
+    category: "Internship"
+    section: "india"
+    frequency: "weekly"
+
+  - query: "funded internship abroad Indian undergraduates 2027"
+    category: "Internship"
+    section: "abroad"
+    frequency: "weekly"
+
+  # State Scholarship Portals
+  - query: "MahaDBT scholarship portal 2026 Maharashtra last date"
+    category: "Scholarship"
+    section: "india"
+    frequency: "weekly"
+
+  - query: "Karnataka SSP scholarship portal 2026 post matric"
+    category: "Scholarship"
+    section: "india"
+    frequency: "weekly"
+
+  - query: "Telangana ePASS scholarship 2026 registration"
+    category: "Scholarship"
+    section: "india"
+    frequency: "weekly"
+
+  - query: "West Bengal SVMCM scholarship 2026 application date"
+    category: "Scholarship"
+    section: "india"
+    frequency: "weekly"
+
+  - query: "UP scholarship portal 2026 dashmottar time table"
+    category: "Scholarship"
+    section: "india"
+    frequency: "weekly"

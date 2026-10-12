@@ -1,7 +1,7 @@
 # VidyaSetu Daily Discovery Engine Configuration
 
 settings:
-  max_pages_per_run: 25
+  max_pages_per_run: 35
   max_llm_calls_per_run: 10
   request_timeout_seconds: 15
   user_agent: "VidyaSetuBot/1.0 (+https://mdsamhussain1996.github.io/vidyasetu-scholarship-portal/)"
@@ -40,8 +40,8 @@ watched_pages:
     provider_slug: "csir-india"
     section: "india"
 
-  - name: "SERB-ANRF Research Portals"
-    url: "https://serbonline.in"
+  - name: "ANRF Research Portal (formerly SERB)"
+    url: "https://anrfonline.in"
     kind: "ministry"
     provider_slug: "anrf-india"
     section: "india"
@@ -58,101 +58,161 @@ watched_pages:
     provider_slug: "icmr-india"
     section: "india"
 
-  # Premier Indian Universities & National Institutes
-  - name: "IISc Bengaluru Project Staff Openings"
-    url: "https://iisc.ac.in/careers/project-staff"
+  # Premier Indian Universities & Research Career Pages (Project Positions)
+  - name: "IISc Bengaluru Positions Open"
+    url: "https://iisc.ac.in/positions-open/"
     kind: "university"
-    provider_slug: "iisc-bengaluru"
+    provider_slug: "iisc-bangalore"
     section: "india"
 
-  - name: "IIT Madras Summer Fellowship Programme"
-    url: "https://sfp.iitm.ac.in"
+  - name: "IIT Bombay IRCC Job Opportunities"
+    url: "https://www.ircc.iitb.ac.in/IRCC-Web/rnd/JobOpportunities.jsp"
+    kind: "university"
+    provider_slug: "iit-bombay"
+    section: "india"
+
+  - name: "IIT Delhi IRD Vacancies"
+    url: "https://ird.iitd.ac.in/vacancies"
+    kind: "university"
+    provider_slug: "iit-delhi"
+    section: "india"
+
+  - name: "IIT Madras IC&SR Recruitment"
+    url: "https://icandsr.iitm.ac.in/recruitment/"
     kind: "university"
     provider_slug: "iit-madras"
     section: "india"
 
-  - name: "IIT Roorkee SPARK Portal"
-    url: "https://spark.iitr.ac.in"
+  - name: "IIT Kharagpur SRIC Project Staff"
+    url: "https://erp.iitkgp.ac.in/SRICStaffRecruitment/"
+    kind: "university"
+    provider_slug: "iit-kharagpur"
+    section: "india"
+
+  - name: "IIT Roorkee Project Jobs"
+    url: "https://iitr.ac.in/Careers/Project%20Jobs.html"
     kind: "university"
     provider_slug: "iit-roorkee"
     section: "india"
 
-  - name: "IIT Kanpur SURGE"
-    url: "https://www.iitk.ac.in/surge"
+  - name: "IIT Kanpur DORD Project Vacancies"
+    url: "https://www.iitk.ac.in/dord/project-vacancies"
     kind: "university"
     provider_slug: "iit-kanpur"
     section: "india"
 
-  - name: "IIT Gandhinagar SRIP"
-    url: "https://srip.iitgn.ac.in"
+  - name: "IIT Hyderabad Staff Careers"
+    url: "https://www.iith.ac.in/careers/staff/"
+    kind: "university"
+    provider_slug: "iit-hyderabad"
+    section: "india"
+
+  - name: "IIT Gandhinagar Staff Careers"
+    url: "https://iitgn.ac.in/careers/staff"
     kind: "university"
     provider_slug: "iit-gandhinagar"
     section: "india"
 
-  - name: "Indian Academy of Sciences (IASc) Fellowship"
-    url: "https://web-japps.ias.ac.in"
-    kind: "lab"
-    provider_slug: "iasc-bangalore"
+  - name: "IISER Pune Staff Positions"
+    url: "https://www.iiserpune.ac.in/opportunities/staff-positions"
+    kind: "university"
+    provider_slug: "iiser-pune"
     section: "india"
 
-  - name: "TIFR Visiting Students' Research Programme"
-    url: "https://www.tifr.res.in/~vsrp"
+  - name: "IISER Kolkata Vacancies"
+    url: "https://www.iiserkol.ac.in/web/en/announcements/vacancies/"
+    kind: "university"
+    provider_slug: "iiser-kolkata"
+    section: "india"
+
+  - name: "NIT Trichy Jobs & Project Positions"
+    url: "https://www.nitt.edu/home/other/jobs/"
+    kind: "university"
+    provider_slug: "nit-trichy"
+    section: "india"
+
+  - name: "CSIR-NCL Project Staff Careers"
+    url: "https://www.ncl-india.org/files/Career/ProjectStaff.aspx"
     kind: "lab"
-    provider_slug: "tifr-mumbai"
+    provider_slug: "csir-ncl"
+    section: "india"
+
+  - name: "CSIR-CCMB Project Staff Careers"
+    url: "https://www.ccmb.res.in/Careers/Project-Staff"
+    kind: "lab"
+    provider_slug: "csir-ccmb"
+    section: "india"
+
+  - name: "CSIR-IGIB Career Positions"
+    url: "https://www.igib.res.in/career/project-staff"
+    kind: "lab"
+    provider_slug: "csir-igib"
+    section: "india"
+
+  - name: "DBT-THSTI Career Openings"
+    url: "https://thsti.res.in/en/career-list"
+    kind: "lab"
+    provider_slug: "dbt-thsti"
+    section: "india"
+
+  - name: "ICMR-NIV Pune Careers"
+    url: "https://www.niv.co.in/career/"
+    kind: "lab"
+    provider_slug: "icmr-niv"
     section: "india"
 
   # Philanthropic Foundations & CSR
   - name: "Tata Trusts Education Grants"
-    url: "https://www.tatatrusts.org"
+    url: "https://www.tatatrusts.org/our-work/individual-grants-programme/education-grants"
     kind: "trust"
     provider_slug: "tata-trusts"
     section: "india"
 
-  - name: "Reliance Foundation Scholarships"
-    url: "https://www.scholarships.reliancefoundation.org"
+  - name: "Reliance Foundation Undergraduate Scholarships"
+    url: "https://www.reliancefoundation.org/undergraduate-scholarships"
     kind: "company"
     provider_slug: "reliance-foundation"
     section: "india"
 
-  - name: "Kotak Education Foundation"
-    url: "https://kotakeducation.org"
+  - name: "Kotak Education Foundation Kanya Scholarship"
+    url: "https://kotakeducation.org/kotak-kanya-scholarship/"
     kind: "trust"
     provider_slug: "kotak-education-foundation"
     section: "india"
 
   # Global / Abroad Watchlist
   - name: "Erasmus Mundus Catalogue (EACEA)"
-    url: "https://www.eacea.ec.europa.eu"
+    url: "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en"
     kind: "ministry"
     provider_slug: "european-union-eacea"
     section: "abroad"
 
-  - name: "Chevening Scholarships Portal"
-    url: "https://www.chevening.org"
+  - name: "Chevening Scholarships India"
+    url: "https://www.chevening.org/scholarship/india/"
     kind: "ministry"
     provider_slug: "uk-fcdo"
     section: "abroad"
 
-  - name: "DAAD International Opportunities Database"
-    url: "https://www.daad.in"
+  - name: "DAAD India Scholarship Database"
+    url: "https://www.daad.in/en/find-funding/scholarship-database/"
     kind: "ministry"
     provider_slug: "daad-germany"
     section: "abroad"
 
   - name: "USIEF Fulbright-Nehru Fellowships"
-    url: "https://www.usief.org.in"
+    url: "https://www.usief.org.in/Fellowships/Fellowships-for-Indian-Citizens.aspx"
     kind: "ministry"
     provider_slug: "usief-india"
     section: "abroad"
 
   - name: "Mitacs Globalink Research Internship"
-    url: "https://www.mitacs.ca"
+    url: "https://www.mitacs.ca/our-programs/globalink-research-internship-students/"
     kind: "ministry"
     provider_slug: "mitacs-canada"
     section: "abroad"
 
   - name: "CERN Summer Student Programmes"
-    url: "https://careers.cern"
+    url: "https://careers.cern/summer"
     kind: "lab"
     provider_slug: "cern-geneva"
     section: "abroad"
@@ -162,12 +222,3 @@ rss_feeds:
   - name: "Press Information Bureau (PIB) Ministry of Education"
     url: "https://pib.gov.in/RssMain.aspx?ModId=6"
     section: "india"
-
-# Pre-defined Search Queries for Discovery Pipeline
-search_queries:
-  - "scholarship for Indian students 2026 site:.gov.in"
-  - "JRF project position site:.ac.in"
-  - "fully funded PhD Indian applicants 2026"
-  - "summer research internship 2027 India"
-  - "postdoc fellowship India applicants site:.res.in"
-  - "Erasmus Mundus joint master degree India"
