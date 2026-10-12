@@ -186,5 +186,12 @@ Open [http://localhost:8089](http://localhost:8089) in your browser.
 
 ---
 
+## 👨‍🏫 Author & Founder
+Created and maintained by **Md Samshad Hussain Ansari**, Assistant Professor of Mathematics, Pune.  
+Portfolio & Personal Website: [https://mdsamhussain1996.github.io/](https://mdsamhussain1996.github.io/)
+
+---
+
 ## 📜 License
 MIT License • Dedicated to student educational access and research welfare in India.
+
