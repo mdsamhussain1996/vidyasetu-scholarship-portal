@@ -1,4 +1,5 @@
-// VidyaSetu Core Application Engine - Self-Updating Edition
+// VidyaSetu - Core Application Engine (Notebook Edition)
+// Designed for plain, clear, honest access to educational opportunities.
 
 (function () {
   'use strict';
@@ -10,7 +11,7 @@
     loading: true,
     error: null,
 
-    // Filter states
+    // Active Filters
     section: 'all', // 'all', 'india', 'abroad', 'providers'
     level: 'all',
     status: 'all',
@@ -20,472 +21,819 @@
     target: 'all',
     income: 'all',
     searchQuery: '',
-    sort: 'default',
-    activeChip: null,
+    sort: 'deadline',
+
+    // Hero selections
+    heroStage: 'After 12th',
+    heroPlace: 'all',
+    heroKind: 'all',
 
     // Provider filter
     providerKind: 'all',
     providerSearch: '',
     selectedProviderSlug: null,
 
-    // Preferences & Features
-    lang: localStorage.getItem('vidyasetu_lang') || 'en',
-    theme: localStorage.getItem('vidyasetu_theme') || 'light',
-    viewMode: 'grid', // 'grid' or 'compact'
-    bookmarks: JSON.parse(localStorage.getItem('vidyasetu_bookmarks') || '[]'),
+    // User preferences & Bookmarks
+    lang: safeLocalStorage('get', 'vidyasetu_lang') || 'en',
+    theme: safeLocalStorage('get', 'vidyasetu_theme') || 'light',
+    bookmarks: JSON.parse(safeLocalStorage('get', 'vidyasetu_bookmarks') || '[]'),
     compare: []
   };
 
-  // Hindi Translations Dictionary
-  const I18N = {
-    en: {
-      siteTagline: "National & Global Opportunities Portal",
-      navWizardText: "Match My Profile",
-      navCalendarText: "Deadline Calendar",
-      navSavedText: "Saved",
-      navSubmitText: "Submit Opportunity",
-      heroBadgeLevels: "12th Pass • Bachelor's • Master's • PhD • Postdoc",
-      verifiedBadge: "✓ Verified Daily by Official Sources",
-      heroMainTitle: "Every Scholarship, Government Fund, Private Grant & Internship in One Place.",
-      heroSubTitle: "150+ verified opportunities across MoE, DST, AICTE, CSIR, Indian state portals, Tata Trusts, Reliance, and fully funded global fellowships in Europe, USA, UK, Canada, Japan, and Australia.",
-      lblMetricIndia: "Opportunities in India",
-      lblMetricAbroad: "Opportunities Abroad",
-      lblMetricGov: "Government Funds",
-      lblMetricPvt: "Private & CSR Funds",
-      lblMetricIntern: "Funded Internships",
-      tabLabelAll: "All Opportunities",
-      tabLabelIndia: "SECTION 1: India",
-      tabLabelAbroad: "SECTION 2: Abroad",
-      tabLabelProviders: "Providers Directory",
-      btnFindEligibleText: "Find Eligible Opportunities",
-      lblQuickFilters: "Quick Filters:",
-      lblClearFilters: "Clear Filters",
-      lblLoadingTitle: "Loading Verified Opportunities...",
-      lblGuidesTitle: "Essential Guides & Preparation Resources",
-      lblGuidesSub: "Everything you need to successfully win national and international scholarships"
-    },
-    hi: {
-      siteTagline: "राष्ट्रीय एवं अंतर्राष्ट्रीय अवसर पोर्टल",
-      navWizardText: "मेरी योग्यता जाँचें",
-      navCalendarText: "आवेदन कैलेंडर",
-      navSavedText: "सहेजे गए",
-      navSubmitText: "नया अवसर जोड़ें",
-      heroBadgeLevels: "12वीं पास • स्नातक • स्नातकोत्तर • पीएचडी • पोस्टडॉक",
-      verifiedBadge: "✓ आधिकारिक स्रोतों द्वारा दैनिक सत्यापित",
-      heroMainTitle: "सभी सरकारी व निजी छात्रवृत्तियां, रिसर्च प्रोजेक्ट और इंटर्नशिप एक ही स्थान पर।",
-      heroSubTitle: "शिक्षा मंत्रालय, DST, AICTE, CSIR, राज्य पोर्टलों, टाटा ट्रस्ट्स, रिलायंस और यूरोप, अमेरिका, यूके, कनाडा, जापान की 150+ पूर्णतः वित्तपोषित छात्रवृत्तियां।",
-      lblMetricIndia: "भारत में अवसर",
-      lblMetricAbroad: "विदेश में अवसर",
-      lblMetricGov: "सरकारी फंड्स",
-      lblMetricPvt: "निजी व CSR फंड्स",
-      lblMetricIntern: "सवेतन इंटर्नशिप",
-      tabLabelAll: "सभी अवसर",
-      tabLabelIndia: "भाग 1: भारत में अवसर",
-      tabLabelAbroad: "भाग 2: विदेश में अवसर",
-      tabLabelProviders: "संस्थान निर्देशिका",
-      btnFindEligibleText: "पात्र अवसर खोजें",
-      lblQuickFilters: "त्वरित फ़िल्टर:",
-      lblClearFilters: "फ़िल्टर हटाएं",
-      lblLoadingTitle: "सत्यापित अवसर लोड हो रहे हैं...",
-      lblGuidesTitle: "महत्वपूर्ण मार्गदर्शिका एवं दस्तावेज़ चेकलिस्ट",
-      lblGuidesSub: "राष्ट्रीय व वैश्विक छात्रवृत्तियों में सफलता पाने हेतु सम्पूर्ण विवरण"
+  let activeModalItem = null;
+
+  // Safe localStorage helper
+  function safeLocalStorage(action, key, val) {
+    try {
+      if (action === 'get') return localStorage.getItem(key);
+      if (action === 'set') localStorage.setItem(key, val);
+      if (action === 'remove') localStorage.removeItem(key);
+    } catch (e) {
+      console.warn('localStorage access failed:', e);
+      return null;
     }
-  };
+  }
 
-  // DOM Elements
+  // DOM Elements Cache
   const els = {
-    // Top Bar
-    closingSoonStrip: document.getElementById('closingSoonStrip'),
-    closingSoonCarousel: document.getElementById('closingSoonCarousel'),
-    langToggleBtn: document.getElementById('langToggleBtn'),
-    currentLangLabel: document.getElementById('currentLangLabel'),
+    // Nav & Theme
     themeToggleBtn: document.getElementById('themeToggleBtn'),
-    themeIcon: document.getElementById('themeIcon'),
-    verifiedStatusBadge: document.getElementById('verifiedStatusBadge'),
+    langToggleBtn: document.getElementById('langToggleBtn'),
+    mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+    mainNavLinks: document.getElementById('mainNavLinks'),
+    logoBrand: document.getElementById('logoBrand'),
+    savedCountBadge: document.getElementById('savedCountBadge'),
+    navLinkIndia: document.getElementById('navLinkIndia'),
+    navLinkAbroad: document.getElementById('navLinkAbroad'),
+    btnOpenCalendar: document.getElementById('btnOpenCalendar'),
+    btnSavedBookmarks: document.getElementById('btnSavedBookmarks'),
+    btnOpenWizard: document.getElementById('btnOpenWizard'),
 
-    // Hero metrics
-    metricIndiaCount: document.getElementById('metricIndiaCount'),
-    metricAbroadCount: document.getElementById('metricAbroadCount'),
-    metricGovCount: document.getElementById('metricGovCount'),
-    metricPvtCount: document.getElementById('metricPvtCount'),
-    metricInternCount: document.getElementById('metricInternCount'),
-    metricConfirmedCount: document.getElementById('metricConfirmedCount'),
-    metricExpectedCount: document.getElementById('metricExpectedCount'),
+    // Hero
+    heroStage: document.getElementById('heroStage'),
+    heroPlace: document.getElementById('heroPlace'),
+    heroKind: document.getElementById('heroKind'),
+    heroLiveSummary: document.getElementById('heroLiveSummary'),
+    btnHeroShowAll: document.getElementById('btnHeroShowAll'),
+    btnResetHero: document.getElementById('btnResetHero'),
+    closingSoonList: document.getElementById('closingSoonList'),
+    btnOpenCalendarLink: document.getElementById('btnOpenCalendarLink'),
 
-    // Section tabs
-    tabSectionAll: document.getElementById('tabSectionAll'),
-    tabSectionIndia: document.getElementById('tabSectionIndia'),
-    tabSectionAbroad: document.getElementById('tabSectionAbroad'),
-    tabSectionProviders: document.getElementById('tabSectionProviders'),
-    badgeAll: document.getElementById('badgeAll'),
-    badgeIndia: document.getElementById('badgeIndia'),
-    badgeAbroad: document.getElementById('badgeAbroad'),
-    badgeProviders: document.getElementById('badgeProviders'),
+    // Road Track
+    roadStops: document.querySelectorAll('.road-stop'),
+    roadCountAfter12: document.getElementById('roadCountAfter12'),
+    roadCountBachelor: document.getElementById('roadCountBachelor'),
+    roadCountMaster: document.getElementById('roadCountMaster'),
+    roadCountPhD: document.getElementById('roadCountPhD'),
+    roadCountPostdoc: document.getElementById('roadCountPostdoc'),
 
-    // Filter controls
-    filterSection: document.getElementById('filterSection'),
-    searchInput: document.getElementById('searchInput'),
-    btnHeroWizard: document.getElementById('btnHeroWizard'),
+    // Columns
+    colIndiaCount: document.getElementById('colIndiaCount'),
+    colAbroadCount: document.getElementById('colAbroadCount'),
+    statePillsContainer: document.getElementById('statePillsContainer'),
+    abroadCountriesList: document.getElementById('abroadCountriesList'),
+
+    // Results & Sidebar
+    resultsSection: document.getElementById('resultsSection'),
+    filtersSidebar: document.getElementById('filtersSidebar'),
     filterLevel: document.getElementById('filterLevel'),
+    filterSection: document.getElementById('filterSection'),
     filterStatus: document.getElementById('filterStatus'),
     filterCategory: document.getElementById('filterCategory'),
     filterCountry: document.getElementById('filterCountry'),
-    filterState: document.getElementById('filterState'),
     filterTarget: document.getElementById('filterTarget'),
-    filterIncome: document.getElementById('filterIncome'),
-    chips: document.querySelectorAll('.chip-btn'),
+    filterSort: document.getElementById('filterSort'),
     btnResetFilters: document.getElementById('btnResetFilters'),
+    btnMobileFilterToggle: document.getElementById('btnMobileFilterToggle'),
+    btnCloseMobileFilters: document.getElementById('btnCloseMobileFilters'),
 
-    // Views & Containers
+    // Search & Lists
+    searchInput: document.getElementById('searchInput'),
+    resultsCountText: document.getElementById('resultsCountText'),
+    btnViewProviders: document.getElementById('btnViewProviders'),
+    opportunitiesListContainer: document.getElementById('opportunitiesListContainer'),
     loadingState: document.getElementById('loadingState'),
     errorState: document.getElementById('errorState'),
     errorMessage: document.getElementById('errorMessage'),
-    resultsMeta: document.getElementById('resultsMeta'),
-    resultsCountText: document.getElementById('resultsCountText'),
-    cardsGridContainer: document.getElementById('cardsGridContainer'),
-    providersContainer: document.getElementById('providersContainer'),
-    providersGrid: document.getElementById('providersGrid'),
-    providerSearchInput: document.getElementById('providerSearchInput'),
-    providerKindFilter: document.getElementById('providerKindFilter'),
     noResultsState: document.getElementById('noResultsState'),
     btnResetNoResults: document.getElementById('btnResetNoResults'),
 
-    viewModeGrid: document.getElementById('viewModeGrid'),
-    viewModeCompact: document.getElementById('viewModeCompact'),
+    // Providers View
+    providersContainer: document.getElementById('providersContainer'),
+    providersGrid: document.getElementById('providersGrid'),
+    providerSearchInput: document.getElementById('providerSearchInput'),
+    btnBackToOpportunities: document.getElementById('btnBackToOpportunities'),
+
+    // Compare Drawer
+    compareDrawer: document.getElementById('compareDrawer'),
+    compareBadgeCount: document.getElementById('compareBadgeCount'),
+    btnLaunchComparison: document.getElementById('btnLaunchComparison'),
+    btnClearComparison: document.getElementById('btnClearComparison'),
 
     // Modals
     detailModal: document.getElementById('detailModal'),
     modalCloseBtn: document.getElementById('modalCloseBtn'),
-    modalBadgeGroup: document.getElementById('modalBadgeGroup'),
     modalTitle: document.getElementById('modalTitle'),
     modalAgency: document.getElementById('modalAgency'),
+    modalEligibility: document.getElementById('modalEligibility'),
+    modalLevelsAndStreams: document.getElementById('modalLevelsAndStreams'),
     modalAmount: document.getElementById('modalAmount'),
     modalCoverage: document.getElementById('modalCoverage'),
-    modalEligibility: document.getElementById('modalEligibility'),
-    modalLevels: document.getElementById('modalLevels'),
-    modalStreams: document.getElementById('modalStreams'),
     modalDocChecklist: document.getElementById('modalDocChecklist'),
     modalApplicationSteps: document.getElementById('modalApplicationSteps'),
     modalDeadline: document.getElementById('modalDeadline'),
+    modalEvidenceContainer: document.getElementById('modalEvidenceContainer'),
+    modalEvidenceText: document.getElementById('modalEvidenceText'),
+    modalVerificationTimestamp: document.getElementById('modalVerificationTimestamp'),
     modalOfficialLink: document.getElementById('modalOfficialLink'),
     modalBookmarkBtn: document.getElementById('modalBookmarkBtn'),
     modalReportBrokenBtn: document.getElementById('modalReportBrokenBtn'),
     btnModalGoogleCal: document.getElementById('btnModalGoogleCal'),
     btnModalICS: document.getElementById('btnModalICS'),
 
-    // Wizard
-    btnOpenWizard: document.getElementById('btnOpenWizard'),
-    wizardModal: document.getElementById('wizardModal'),
-    wizardCloseBtn: document.getElementById('wizardCloseBtn'),
-    btnCancelWizard: document.getElementById('btnCancelWizard'),
-    btnApplyWizard: document.getElementById('btnApplyWizard'),
-    wizLevel: document.getElementById('wizLevel'),
-    wizStream: document.getElementById('wizStream'),
-    wizCategory: document.getElementById('wizCategory'),
-    wizDestination: document.getElementById('wizDestination'),
-
-    // Comparison Drawer & Modal
-    compareDrawer: document.getElementById('compareDrawer'),
-    compareBadgeCount: document.getElementById('compareBadgeCount'),
-    btnLaunchComparison: document.getElementById('btnLaunchComparison'),
-    btnClearComparison: document.getElementById('btnClearComparison'),
-    compareModal: document.getElementById('compareModal'),
-    compareCloseBtn: document.getElementById('compareCloseBtn'),
-    btnCloseCompareFooter: document.getElementById('btnCloseCompareFooter'),
-    compareTableContainer: document.getElementById('compareTableContainer'),
-
-    // Calendar Modal
-    btnOpenCalendar: document.getElementById('btnOpenCalendar'),
     calendarModal: document.getElementById('calendarModal'),
     calendarCloseBtn: document.getElementById('calendarCloseBtn'),
+    dynamicCalendarBody: document.getElementById('dynamicCalendarBody'),
     btnCloseCalendarFooter: document.getElementById('btnCloseCalendarFooter'),
-    dynamicCalendarGrid: document.getElementById('dynamicCalendarGrid'),
 
-    // Bookmarks Modal
-    btnSavedBookmarks: document.getElementById('btnSavedBookmarks'),
-    savedCountBadge: document.getElementById('savedCountBadge'),
+    wizardModal: document.getElementById('wizardModal'),
+    wizardCloseBtn: document.getElementById('wizardCloseBtn'),
+    wizLevel: document.getElementById('wizLevel'),
+    wizStream: document.getElementById('wizStream'),
+    wizDestination: document.getElementById('wizDestination'),
+    btnCancelWizard: document.getElementById('btnCancelWizard'),
+    btnApplyWizard: document.getElementById('btnApplyWizard'),
+
+    compareModal: document.getElementById('compareModal'),
+    compareCloseBtn: document.getElementById('compareCloseBtn'),
+    compareTableContainer: document.getElementById('compareTableContainer'),
+    btnCloseCompareFooter: document.getElementById('btnCloseCompareFooter'),
+
     bookmarksModal: document.getElementById('bookmarksModal'),
     bookmarksCloseBtn: document.getElementById('bookmarksCloseBtn'),
-    btnCloseBookmarksFooter: document.getElementById('btnCloseBookmarksFooter'),
     bookmarksListBody: document.getElementById('bookmarksListBody'),
-    btnClearAllBookmarks: document.getElementById('btnClearAllBookmarks')
+    btnClearAllBookmarks: document.getElementById('btnClearAllBookmarks'),
+    btnCloseBookmarksFooter: document.getElementById('btnCloseBookmarksFooter'),
+
+    footerUpdatedDate: document.getElementById('footerUpdatedDate')
   };
 
-  let activeModalItem = null;
-
-  // Initialize Application
+  // --------------------------------------------------------------------------
+  // Application Initialization
+  // --------------------------------------------------------------------------
   async function init() {
     applyTheme(state.theme);
-    applyLanguage(state.lang);
+    updateBookmarkBadge();
     bindEvents();
-    handleHashRouting();
+    loadSavedHeroSelections();
 
     try {
-      await loadData();
-    } catch (err) {
-      showError(err.message);
-    }
-  }
-
-  // Fetch Data from JSON files (Phase 1)
-  async function loadData() {
-    els.loadingState.style.display = 'block';
-    els.errorState.style.display = 'none';
-
-    try {
-      const [oppsRes, metaRes] = await Promise.all([
+      const [oppRes, metaRes] = await Promise.all([
         fetch('data/opportunities.json'),
-        fetch('data/meta.json').catch(() => null)
+        fetch('data/meta.json')
       ]);
 
-      if (!oppsRes.ok) {
-        throw new Error(`Failed to load opportunities data (HTTP ${oppsRes.status})`);
-      }
-
-      state.opportunities = await oppsRes.json();
-      if (metaRes && metaRes.ok) {
+      if (!oppRes.ok) throw new Error(`HTTP ${oppRes.status} loading opportunities`);
+      
+      state.opportunities = await oppRes.json();
+      if (metaRes.ok) {
         state.meta = await metaRes.json();
       }
 
       state.loading = false;
-      els.loadingState.style.display = 'none';
-
-      updateMetrics();
-      renderClosingSoonStrip();
-      renderCards();
-      renderProviders();
-      updateBookmarkBadge();
-
-      // Check if hash points to specific opportunity
-      checkHashDeepLink();
-    } catch (e) {
+      renderInitialView();
+      handleHashRouting();
+    } catch (err) {
+      console.error('Initialization error:', err);
       state.loading = false;
-      showError(e.message || "Failed to load data/opportunities.json");
+      state.error = err.message;
+      if (els.loadingState) els.loadingState.style.display = 'none';
+      if (els.errorState) {
+        els.errorState.style.display = 'block';
+        if (els.errorMessage) els.errorMessage.textContent = err.message;
+      }
     }
   }
 
-  function showError(msg) {
-    els.loadingState.style.display = 'none';
-    els.errorState.style.display = 'block';
-    els.errorMessage.textContent = msg;
-  }
+  // Render initial page elements once data loads
+  function renderInitialView() {
+    if (els.loadingState) els.loadingState.style.display = 'none';
 
-  // Theme Management
-  function applyTheme(theme) {
-    state.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('vidyasetu_theme', theme);
-    if (els.themeIcon) {
-      els.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    // Populate metadata & footer
+    if (state.meta && els.footerUpdatedDate) {
+      const d = state.meta.lastVerifiedDate || 'October 2026';
+      els.footerUpdatedDate.textContent = `Updated ${d}`;
     }
+
+    updateHeroSummary();
+    renderClosingSoonNote();
+    renderRoadCounts();
+    renderColumnsSummary();
+    renderCards();
+    renderProviders();
   }
 
-  function toggleTheme() {
-    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  // --------------------------------------------------------------------------
+  // Hero: Sentence & Live Matching
+  // --------------------------------------------------------------------------
+  function loadSavedHeroSelections() {
+    const savedStage = safeLocalStorage('get', 'vidyasetu_hero_stage');
+    const savedPlace = safeLocalStorage('get', 'vidyasetu_hero_place');
+    const savedKind = safeLocalStorage('get', 'vidyasetu_hero_kind');
+
+    if (savedStage && els.heroStage) els.heroStage.value = savedStage;
+    if (savedPlace && els.heroPlace) els.heroPlace.value = savedPlace;
+    if (savedKind && els.heroKind) els.heroKind.value = savedKind;
   }
 
-  // Language Management (Phase 5)
-  function applyLanguage(lang) {
-    state.lang = lang;
-    localStorage.setItem('vidyasetu_lang', lang);
-    const dict = I18N[lang] || I18N.en;
+  function saveHeroSelections() {
+    if (els.heroStage) safeLocalStorage('set', 'vidyasetu_hero_stage', els.heroStage.value);
+    if (els.heroPlace) safeLocalStorage('set', 'vidyasetu_hero_place', els.heroPlace.value);
+    if (els.heroKind) safeLocalStorage('set', 'vidyasetu_hero_kind', els.heroKind.value);
+  }
 
-    els.currentLangLabel.textContent = lang === 'en' ? 'हिंदी' : 'English';
+  function getHeroMatches() {
+    if (!state.opportunities.length) return [];
 
-    Object.keys(dict).forEach(key => {
-      const el = document.getElementById(key);
-      if (el) el.textContent = dict[key];
+    const stage = els.heroStage ? els.heroStage.value : 'After 12th';
+    const place = els.heroPlace ? els.heroPlace.value : 'all';
+    const kind = els.heroKind ? els.heroKind.value : 'all';
+
+    return state.opportunities.filter(item => {
+      // Stage match
+      if (!item.educationLevel || !item.educationLevel.includes(stage)) return false;
+
+      // Location match
+      if (place === 'india' && item.section !== 'india') return false;
+      if (place === 'abroad' && item.section !== 'abroad') return false;
+
+      // Kind match
+      if (kind === 'funds') {
+        if (!['Scholarship', 'Fellowship', 'Fund/Grant'].includes(item.category)) return false;
+      } else if (kind === 'internships_projects') {
+        if (!['Internship', 'Project Position (JRF/SRF/RA)'].includes(item.category)) return false;
+      }
+
+      return true;
     });
   }
 
-  function toggleLanguage() {
-    applyLanguage(state.lang === 'en' ? 'hi' : 'en');
-  }
+  function updateHeroSummary() {
+    saveHeroSelections();
+    const matches = getHeroMatches();
+    const total = matches.length;
 
-  // Status Badge Logic (Part 3)
-  function getStatusBadgeData(item) {
-    const today = new Date().toISOString().slice(0, 10);
-    const status = item.status;
-    const dc = item.dateConfidence || 'expected';
-    const openDate = item.openDate;
-    const deadline = item.deadline;
-    const dlText = item.deadlineText || 'Check official site';
+    if (!els.heroLiveSummary) return;
 
-    // 1. Explicitly Closed
-    if (status === 'closed') {
-      return {
-        cssClass: 'badge-status-closed',
-        text: `Closed · next round expected ${dlText}`
-      };
-    }
-
-    // 2. Rolling
-    if (status === 'rolling') {
-      return {
-        cssClass: 'badge-status-rolling',
-        text: 'Rolling Applications'
-      };
-    }
-
-    // 3. Needs Review
-    if (status === 'needs-review') {
-      return {
-        cssClass: 'badge-status-needs-review',
-        text: '⚠️ Needs Review'
-      };
-    }
-
-    // 4. Confirmed dateConfidence
-    if (dc === 'confirmed') {
-      if (openDate && today < openDate) {
-        return {
-          cssClass: 'badge-status-upcoming',
-          text: `Opens ${openDate}`
-        };
+    if (total === 0) {
+      els.heroLiveSummary.innerHTML = `
+        No opportunities directly match that combination right now. 
+        <span style="color: var(--text-muted); display: block; font-size: 0.9rem; margin-top: 4px;">
+          Tip: Most summer research internships require students to be in their 2nd or 3rd year of a bachelor's degree.
+        </span>
+      `;
+      if (els.btnHeroShowAll) {
+        els.btnHeroShowAll.textContent = 'Show all opportunities';
       }
-      if (deadline) {
-        if (today <= deadline) {
-          return {
-            cssClass: 'badge-status-open',
-            text: `Open · closes ${deadline}`
-          };
-        } else {
-          return {
-            cssClass: 'badge-status-closed',
-            text: `Closed · next round expected ${dlText}`
-          };
-        }
-      }
-      return {
-        cssClass: 'badge-status-open',
-        text: `Open · ${dlText}`
-      };
-    }
-
-    // 5. Expected dateConfidence (NEVER SHOW "Open")
-    if (dc === 'expected') {
-      return {
-        cssClass: 'badge-status-expected',
-        text: `Expected: ${dlText}`
-      };
-    }
-
-    // 6. Unknown dateConfidence
-    return {
-      cssClass: 'badge-status-unknown',
-      text: 'Check official site'
-    };
-  }
-
-  function renderStatusBadge(item) {
-    const badge = getStatusBadgeData(item);
-    return `<span class="badge ${badge.cssClass}">${badge.text}</span>`;
-  }
-
-  function getVerificationBadgeHtml(item) {
-    if (item.lastVerified) {
-      const today = new Date();
-      const verDate = new Date(item.lastVerified);
-      const diffDays = Math.max(0, Math.floor((today - verDate) / (1000 * 60 * 60 * 24)));
-      const text = diffDays === 0 ? 'Verified today' : `Verified ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-      return `<span class="verification-badge verified" title="Confirmed from official source on ${item.lastVerified}">✓ ${text}</span>`;
-    } else {
-      return `<span class="verification-badge unverified" title="Tentative schedule based on previous rounds. Check official site for current cycle.">⏳ Not yet verified for this cycle</span>`;
-    }
-  }
-
-  // Metrics & Badges (reads from meta.json when available)
-  function updateMetrics() {
-    const total = state.meta?.total ?? state.opportunities.length;
-    const india = state.meta?.india ?? state.opportunities.filter(o => o.section === 'india').length;
-    const abroad = state.meta?.abroad ?? state.opportunities.filter(o => o.section === 'abroad').length;
-    const gov = state.meta?.government ?? state.opportunities.filter(o => o.type === 'government').length;
-    const pvt = state.meta?.private ?? state.opportunities.filter(o => o.type === 'private').length;
-    const intern = state.meta?.internships ?? state.opportunities.filter(o => o.category === 'Internship').length;
-    const confCount = state.meta?.confirmedCount ?? state.opportunities.filter(o => o.dateConfidence === 'confirmed').length;
-    const expCount = state.meta?.expectedCount ?? state.opportunities.filter(o => o.dateConfidence === 'expected').length;
-
-    // Unique providers count
-    const providersSet = new Set(state.opportunities.map(o => o.provider.slug));
-
-    els.metricIndiaCount.textContent = india;
-    els.metricAbroadCount.textContent = abroad;
-    els.metricGovCount.textContent = gov;
-    els.metricPvtCount.textContent = pvt;
-    els.metricInternCount.textContent = intern;
-    if (els.metricConfirmedCount) els.metricConfirmedCount.textContent = confCount;
-    if (els.metricExpectedCount) els.metricExpectedCount.textContent = expCount;
-
-    els.badgeAll.textContent = total;
-    els.badgeIndia.textContent = india;
-    els.badgeAbroad.textContent = abroad;
-    els.badgeProviders.textContent = providersSet.size;
-
-    // Meta verification badge (Part 3)
-    if (state.meta && state.meta.lastVerifiedDate) {
-      els.verifiedStatusBadge.innerHTML = `<span>✓</span> Verified ${state.meta.lastVerifiedDate} (${confCount} Confirmed · ${expCount} Expected)`;
-    } else {
-      els.verifiedStatusBadge.innerHTML = `<span>⏳</span> Not yet verified for this cycle`;
-    }
-  }
-
-  // Imminent Deadline / Closing Soon Strip (Uses ONLY confirmed dates)
-  function renderClosingSoonStrip() {
-    const today = new Date().toISOString().slice(0, 10);
-    const withDeadlines = state.opportunities
-      .filter(o => o.dateConfidence === 'confirmed' && o.deadline && o.deadline >= today)
-      .sort((a, b) => a.deadline.localeCompare(b.deadline))
-      .slice(0, 8);
-
-    if (withDeadlines.length === 0) {
-      els.closingSoonStrip.style.display = 'none';
       return;
     }
 
-    els.closingSoonStrip.style.display = 'block';
-    els.closingSoonCarousel.innerHTML = withDeadlines.map(it => `
-      <div class="closing-pill" onclick="window.VidyaSetu.openDetailModal('${it.id}')">
-        <span>⏰ ${it.deadline}</span>: <strong>${it.title.slice(0, 32)}...</strong>
-      </div>
-    `).join('');
-  }
+    const govCount = matches.filter(m => m.type === 'government').length;
+    const otherCount = total - govCount;
 
-  // Bookmarking
-  function isBookmarked(id) {
-    return state.bookmarks.includes(id);
-  }
-
-  function toggleBookmark(id) {
-    if (isBookmarked(id)) {
-      state.bookmarks = state.bookmarks.filter(bId => bId !== id);
+    let details = '';
+    if (govCount > 0 && otherCount > 0) {
+      details = ` <strong>${govCount}</strong> come from the government and <strong>${otherCount}</strong> from trusts, companies and universities.`;
+    } else if (govCount > 0) {
+      details = ` All <strong>${govCount}</strong> come from central and state governments.`;
     } else {
-      state.bookmarks.push(id);
+      details = ` Offered by universities and philanthropic trusts.`;
     }
-    localStorage.setItem('vidyasetu_bookmarks', JSON.stringify(state.bookmarks));
-    updateBookmarkBadge();
+
+    els.heroLiveSummary.innerHTML = `
+      <strong>${total}</strong> opportunities fit that.${details}
+    `;
+
+    if (els.btnHeroShowAll) {
+      els.btnHeroShowAll.textContent = `Show me all ${total}`;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Closing Soon Note Card
+  // --------------------------------------------------------------------------
+  function renderClosingSoonNote() {
+    if (!els.closingSoonList || !state.opportunities.length) return;
+
+    // Pick top confirmed closing first, then active cycles
+    const candidates = state.opportunities
+      .filter(it => it.status === 'open' || it.dateConfidence === 'confirmed')
+      .slice(0, 5);
+
+    els.closingSoonList.innerHTML = candidates.map(it => {
+      let dateHtml = '';
+      if (it.dateConfidence === 'confirmed' && it.deadline) {
+        dateHtml = `<span class="highlighter">closes ${formatShortDate(it.deadline)}</span>`;
+      } else {
+        dateHtml = `<span class="highlighter">usually ${it.deadlineText || 'mid-cycle'}</span>`;
+      }
+
+      return `
+        <li class="pinned-item">
+          <a href="#/opportunity/${it.id}" onclick="window.VidyaSetu.openDetailModal('${it.id}'); return false;">
+            ${it.title}
+          </a>
+          <span class="pinned-item-date">${dateHtml} • ${it.provider.name}</span>
+        </li>
+      `;
+    }).join('');
+  }
+
+  // --------------------------------------------------------------------------
+  // Road Track & Columns Counts
+  // --------------------------------------------------------------------------
+  function renderRoadCounts() {
+    const opps = state.opportunities;
+    const countStage = (lvl) => opps.filter(o => o.educationLevel && o.educationLevel.includes(lvl)).length;
+
+    if (els.roadCountAfter12) els.roadCountAfter12.textContent = `${countStage('After 12th')}`;
+    if (els.roadCountBachelor) els.roadCountBachelor.textContent = `${countStage('Bachelor')}`;
+    if (els.roadCountMaster) els.roadCountMaster.textContent = `${countStage('Master')}`;
+    if (els.roadCountPhD) els.roadCountPhD.textContent = `${countStage('PhD')}`;
+    if (els.roadCountPostdoc) els.roadCountPostdoc.textContent = `${countStage('Postdoc')}`;
+  }
+
+  function renderColumnsSummary() {
+    const opps = state.opportunities;
+    const indiaCount = opps.filter(o => o.section === 'india').length;
+    const abroadCount = opps.filter(o => o.section === 'abroad').length;
+
+    if (els.colIndiaCount) els.colIndiaCount.textContent = `${indiaCount}`;
+    if (els.colAbroadCount) els.colAbroadCount.textContent = `${abroadCount}`;
+
+    // Render Abroad Countries Table (Wikipedia style)
+    if (els.abroadCountriesList) {
+      const countryMap = new Map();
+      opps.filter(o => o.section === 'abroad').forEach(o => {
+        const c = o.country || 'International';
+        countryMap.set(c, (countryMap.get(c) || 0) + 1);
+      });
+
+      const sorted = Array.from(countryMap.entries())
+        .sort((a, b) => b[1] - a[1]);
+
+      els.abroadCountriesList.innerHTML = sorted.map(([country, count]) => `
+        <a class="country-row" href="#section-abroad" data-country="${country}">
+          <span>${country}</span>
+          <span class="country-count">${count}</span>
+        </a>
+      `).join('');
+
+      // Add click events to country rows
+      els.abroadCountriesList.querySelectorAll('.country-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          e.preventDefault();
+          const country = row.getAttribute('data-country');
+          state.section = 'abroad';
+          state.country = country;
+          if (els.filterSection) els.filterSection.value = 'abroad';
+          if (els.filterCountry) els.filterCountry.value = country;
+          renderCards();
+          scrollToResults();
+        });
+      });
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Main Calm Opportunities List
+  // --------------------------------------------------------------------------
+  function getFilteredOpportunities() {
+    return state.opportunities.filter(it => {
+      // Section
+      if (state.section !== 'all' && it.section !== state.section) return false;
+
+      // Education Level
+      if (state.level !== 'all' && it.educationLevel && !it.educationLevel.includes(state.level)) return false;
+
+      // Status
+      if (state.status !== 'all') {
+        if (state.status === 'open' && (it.status !== 'open' || it.dateConfidence !== 'confirmed')) return false;
+        if (state.status === 'expected' && it.dateConfidence !== 'expected') return false;
+        if (state.status === 'closed' && it.status !== 'closed') return false;
+      }
+
+      // Category
+      if (state.category !== 'all' && it.category !== state.category) return false;
+
+      // Country
+      if (state.country !== 'all' && it.country !== state.country) return false;
+
+      // State Filter (for Indian State Schemes)
+      if (state.stateFilter !== 'all') {
+        const matchState = (it.state && it.state.toLowerCase() === state.stateFilter.toLowerCase()) ||
+                           it.title.toLowerCase().includes(state.stateFilter.toLowerCase()) ||
+                           it.provider.name.toLowerCase().includes(state.stateFilter.toLowerCase());
+        if (!matchState) return false;
+      }
+
+      // Target Group
+      if (state.target !== 'all') {
+        if (state.target === 'women' && it.targetGroup !== 'Girls' && !it.tags.includes('women-only')) return false;
+        if (['sc', 'st', 'obc', 'minority', 'pwd'].includes(state.target)) {
+          if (!it.tags.some(t => t.includes(state.target)) && !it.targetGroup.toLowerCase().includes(state.target)) return false;
+        }
+      }
+
+      // Search Query
+      if (state.searchQuery.trim() !== '') {
+        const q = state.searchQuery.toLowerCase();
+        const haystack = `${it.title} ${it.provider.name} ${it.eligibility} ${it.fundingAmount} ${it.country || ''} ${it.tags.join(' ')}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+
+      return true;
+    }).sort((a, b) => {
+      if (state.sort === 'deadline') {
+        // Confirmed open deadlines first
+        if (a.dateConfidence === 'confirmed' && b.dateConfidence !== 'confirmed') return -1;
+        if (b.dateConfidence === 'confirmed' && a.dateConfidence !== 'confirmed') return 1;
+        if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
+      } else if (state.sort === 'title') {
+        return a.title.localeCompare(b.title);
+      }
+      return 0;
+    });
+  }
+
+  function renderCards() {
+    if (state.section === 'providers') {
+      if (els.opportunitiesListContainer) els.opportunitiesListContainer.style.display = 'none';
+      if (els.resultsSection) els.resultsSection.style.display = 'none';
+      if (els.providersContainer) els.providersContainer.style.display = 'block';
+      return;
+    } else {
+      if (els.opportunitiesListContainer) els.opportunitiesListContainer.style.display = 'flex';
+      if (els.resultsSection) els.resultsSection.style.display = 'block';
+      if (els.providersContainer) els.providersContainer.style.display = 'none';
+    }
+
+    const list = getFilteredOpportunities();
+
+    if (els.resultsCountText) {
+      els.resultsCountText.innerHTML = `Showing <strong>${list.length}</strong> ${
+        state.section === 'india' ? 'opportunities in India' :
+        state.section === 'abroad' ? 'opportunities abroad' :
+        'opportunities'
+      }`;
+    }
+
+    if (list.length === 0) {
+      if (els.opportunitiesListContainer) els.opportunitiesListContainer.innerHTML = '';
+      if (els.noResultsState) els.noResultsState.style.display = 'block';
+      return;
+    } else {
+      if (els.noResultsState) els.noResultsState.style.display = 'none';
+    }
+
+    if (!els.opportunitiesListContainer) return;
+
+    els.opportunitiesListContainer.innerHTML = list.map(item => {
+      const bookmarked = isBookmarked(item.id);
+      const compared = isInCompare(item.id);
+      const levelsText = (item.educationLevel || []).join(', ');
+
+      // Status Badge Logic
+      let statusHtml = '';
+      if (item.dateConfidence === 'confirmed' && item.status === 'open' && item.deadline) {
+        statusHtml = `<span class="status-badge open">Open, closes ${formatShortDate(item.deadline)}</span>`;
+      } else if (item.status === 'closed') {
+        statusHtml = `<span class="status-badge closed">Closed. Next round expected ${item.deadlineText || 'next cycle'}</span>`;
+      } else if (item.deadlineText && item.deadlineText.toLowerCase().includes('rolling')) {
+        statusHtml = `<span class="status-badge open">Rolling, open year-round</span>`;
+      } else {
+        statusHtml = `<span class="status-badge expected">Expected: ${item.deadlineText || 'Check official site'}</span>`;
+      }
+
+      // Verification note
+      let verifyNote = '';
+      if (item.lastVerified) {
+        verifyNote = `<span class="verification-note">• Checked for 2026/27 cycle</span>`;
+      } else {
+        verifyNote = `<span class="verification-note">• Not yet checked for this cycle</span>`;
+      }
+
+      return `
+        <article class="opportunity-row" data-id="${item.id}">
+          <div class="row-main">
+            <div class="row-provider-line">
+              <a href="#/provider/${item.provider.slug}" class="provider-link">
+                ${item.provider.name}
+              </a>
+              <span>•</span>
+              <span>${item.section === 'india' ? 'India' : (item.country || 'Abroad')}</span>
+              <span>•</span>
+              <span style="text-transform: capitalize;">${item.type}</span>
+            </div>
+
+            <h3 class="row-title">
+              <a href="#/opportunity/${item.id}" onclick="window.VidyaSetu.openDetailModal('${item.id}'); return false;">
+                ${item.title}
+              </a>
+            </h3>
+
+            <div class="row-meta-line">
+              <span class="meta-for">For ${levelsText}</span>
+              <span>•</span>
+              <span class="meta-amount">${item.fundingAmount}</span>
+            </div>
+
+            <div class="row-status-line">
+              ${statusHtml}
+              ${verifyNote}
+            </div>
+          </div>
+
+          <div class="row-side-actions">
+            <button 
+              class="pill-btn small ${bookmarked ? 'primary' : 'secondary'}" 
+              onclick="window.VidyaSetu.toggleBookmark('${item.id}')"
+            >
+              ${bookmarked ? 'Saved' : 'Save'}
+            </button>
+
+            <button 
+              class="pill-btn small text-only" 
+              onclick="window.VidyaSetu.toggleCompare('${item.id}')"
+            >
+              ${compared ? 'In compare' : 'Compare'}
+            </button>
+
+            <a 
+              href="${item.officialLink}" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="pill-btn small text-only"
+              title="Visit official portal"
+            >
+              Official site
+            </a>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  // --------------------------------------------------------------------------
+  // Opportunity Detail Reader Guide
+  // --------------------------------------------------------------------------
+  function openDetailModal(id) {
+    const item = state.opportunities.find(o => o.id === id);
+    if (!item) return;
+
+    activeModalItem = item;
+
+    // Set URL Hash for sharing
+    window.location.hash = `/opportunity/${item.id}`;
+
+    if (els.modalTitle) els.modalTitle.textContent = item.title;
+    if (els.modalAgency) els.modalAgency.textContent = `${item.provider.name} (${item.section === 'india' ? 'India' : (item.country || 'Abroad')})`;
+
+    // Question 1: Who can apply?
+    if (els.modalEligibility) els.modalEligibility.textContent = item.eligibility;
+    if (els.modalLevelsAndStreams) {
+      els.modalLevelsAndStreams.textContent = `Target stages: ${(item.educationLevel || []).join(', ')} • Streams: ${(item.streams || []).join(', ')}`;
+    }
+
+    // Question 2: How much do you get?
+    if (els.modalAmount) els.modalAmount.textContent = item.fundingAmount;
+    if (els.modalCoverage) els.modalCoverage.textContent = `Provider Website: ${item.provider.website || 'Official portal'}`;
+
+    // Question 3: Documents Checklist with real checkboxes & persistence
+    if (els.modalDocChecklist) {
+      const savedChecks = JSON.parse(safeLocalStorage('get', `vidyasetu_docs_${item.id}`) || '{}');
+      const docs = item.documentsRequired || [
+        'Aadhaar card linked to bank account (for DBT)',
+        'Bonafide student certificate from current institution',
+        'Previous academic marksheets',
+        'Income certificate issued by competent authority (if means-based)'
+      ];
+
+      els.modalDocChecklist.innerHTML = docs.map((doc, idx) => {
+        const isChecked = !!savedChecks[idx];
+        return `
+          <li class="doc-check-item">
+            <input 
+              type="checkbox" 
+              id="docCheck_${item.id}_${idx}" 
+              ${isChecked ? 'checked' : ''} 
+              onchange="window.VidyaSetu.toggleDocCheck('${item.id}', ${idx}, this.checked)"
+            >
+            <label for="docCheck_${item.id}_${idx}">${doc}</label>
+          </li>
+        `;
+      }).join('');
+    }
+
+    // Question 4: How do you apply?
+    if (els.modalApplicationSteps) {
+      els.modalApplicationSteps.textContent = item.applicationProcess || 'Submit your application directly through the official provider portal.';
+    }
+
+    // Question 5: When?
+    if (els.modalDeadline) {
+      if (item.dateConfidence === 'confirmed') {
+        els.modalDeadline.textContent = `Confirmed application window: Opens ${item.openDate || 'start of cycle'}, closes ${item.deadline || item.deadlineText}.`;
+      } else {
+        els.modalDeadline.textContent = `Expected timeline: ${item.deadlineText || 'Annual cycle'}. (Always confirm on official site before applying).`;
+      }
+    }
+
+    // Calendar Export Links
+    setupCalendarExport(item);
+
+    // Evidence quote box
+    if (els.modalEvidenceContainer && els.modalEvidenceText) {
+      if (item.evidence) {
+        els.modalEvidenceContainer.style.display = 'block';
+        els.modalEvidenceText.textContent = `“${item.evidence}” — Official circular verification`;
+      } else {
+        els.modalEvidenceContainer.style.display = 'none';
+      }
+    }
+
+    // Verification timestamp
+    if (els.modalVerificationTimestamp) {
+      if (item.lastVerified) {
+        els.modalVerificationTimestamp.textContent = `Last checked against official guidelines on ${item.lastVerified}.`;
+      } else {
+        els.modalVerificationTimestamp.textContent = `Not yet verified for this cycle. Dates are from historical patterns.`;
+      }
+    }
+
+    // Buttons
+    if (els.modalOfficialLink) {
+      els.modalOfficialLink.href = item.officialLink;
+    }
+
+    if (els.modalReportBrokenBtn) {
+      els.modalReportBrokenBtn.href = `https://github.com/mdsamhussain1996/vidyasetu-scholarship-portal/issues/new?title=Date+Check+${encodeURIComponent(item.title)}&template=wrong_date.yml`;
+    }
+
+    updateModalBookmarkBtn(item.id);
+
+    if (els.detailModal) els.detailModal.style.display = 'flex';
+  }
+
+  function closeDetailModal() {
+    if (els.detailModal) els.detailModal.style.display = 'none';
+    activeModalItem = null;
+    if (window.location.hash.startsWith('#/opportunity/')) {
+      history.replaceState(null, '', ' ');
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Calendar Export (.ics & Google Calendar)
+  // --------------------------------------------------------------------------
+  function setupCalendarExport(item) {
+    if (!item.deadline) {
+      if (els.btnModalGoogleCal) els.btnModalGoogleCal.style.display = 'none';
+      if (els.btnModalICS) els.btnModalICS.style.display = 'none';
+      return;
+    }
+
+    if (els.btnModalGoogleCal) els.btnModalGoogleCal.style.display = 'inline-flex';
+    if (els.btnModalICS) els.btnModalICS.style.display = 'inline-flex';
+
+    const dStr = item.deadline.replace(/-/g, '');
+    const gUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title + ' Deadline')}&dates=${dStr}T000000Z/${dStr}T235959Z&details=${encodeURIComponent('Apply on: ' + item.officialLink)}&location=${encodeURIComponent(item.provider.name)}`;
+
+    if (els.btnModalGoogleCal) els.btnModalGoogleCal.href = gUrl;
+
+    if (els.btnModalICS) {
+      els.btnModalICS.onclick = () => {
+        const icsContent = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'BEGIN:VEVENT',
+          `SUMMARY:${item.title} Deadline`,
+          `DESCRIPTION:Apply at ${item.officialLink}`,
+          `DTSTART;VALUE=DATE:${dStr}`,
+          `DTEND;VALUE=DATE:${dStr}`,
+          'END:VEVENT',
+          'END:VCALENDAR'
+        ].join('\r\n');
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${item.id}-deadline.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Month-by-Month Calendar Modal
+  // --------------------------------------------------------------------------
+  function openCalendarModal() {
+    if (!els.dynamicCalendarBody || !state.opportunities.length) return;
+
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const monthMap = new Map();
+    months.forEach((m, idx) => monthMap.set(idx + 1, []));
+
+    state.opportunities.forEach(it => {
+      let mIdx = null;
+      if (it.deadline) {
+        const parts = it.deadline.split('-');
+        if (parts.length >= 2) mIdx = parseInt(parts[1], 10);
+      }
+      if (mIdx && monthMap.has(mIdx)) {
+        monthMap.get(mIdx).push(it);
+      }
+    });
+
+    els.dynamicCalendarBody.innerHTML = months.map((monthName, idx) => {
+      const items = monthMap.get(idx + 1) || [];
+      if (items.length === 0) return '';
+
+      return `
+        <div class="month-block">
+          <h4>${monthName} (${items.length})</h4>
+          <ul class="month-items-list">
+            ${items.map(it => `
+              <li class="month-item">
+                <a href="#/opportunity/${it.id}" onclick="window.VidyaSetu.openDetailModal('${it.id}'); return false;">
+                  ${it.title}
+                </a>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">
+                  ${it.deadline ? formatShortDate(it.deadline) : it.deadlineText}
+                </span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+    }).join('');
+
+    if (els.calendarModal) els.calendarModal.style.display = 'flex';
+  }
+
+  function closeCalendarModal() {
+    if (els.calendarModal) els.calendarModal.style.display = 'none';
+  }
+
+  // --------------------------------------------------------------------------
+  // Profile Matcher Wizard Modal
+  // --------------------------------------------------------------------------
+  function openWizardModal() {
+    if (els.wizardModal) els.wizardModal.style.display = 'flex';
+  }
+
+  function closeWizardModal() {
+    if (els.wizardModal) els.wizardModal.style.display = 'none';
+  }
+
+  function applyWizard() {
+    const stage = els.wizLevel ? els.wizLevel.value : 'all';
+    const place = els.wizDestination ? els.wizDestination.value : 'all';
+
+    state.level = stage;
+    state.section = place;
+
+    if (els.filterLevel) els.filterLevel.value = stage;
+    if (els.filterSection) els.filterSection.value = place;
+    if (els.heroStage) els.heroStage.value = stage;
+    if (els.heroPlace) els.heroPlace.value = place;
+
+    closeWizardModal();
+    updateHeroSummary();
     renderCards();
-    if (activeModalItem && activeModalItem.id === id) {
-      updateModalBookmarkBtn();
-    }
+    scrollToResults();
   }
 
-  function updateBookmarkBadge() {
-    if (els.savedCountBadge) {
-      els.savedCountBadge.textContent = state.bookmarks.length;
-    }
-  }
-
-  // Comparison
+  // --------------------------------------------------------------------------
+  // Side by Side Comparison
+  // --------------------------------------------------------------------------
   function isInCompare(id) {
     return state.compare.includes(id);
   }
 
   function toggleCompare(id) {
-    if (isInCompare(id)) {
-      state.compare = state.compare.filter(cId => cId !== id);
+    const idx = state.compare.indexOf(id);
+    if (idx > -1) {
+      state.compare.splice(idx, 1);
     } else {
-      if (state.compare.length >= 3) {
-        alert('You can compare a maximum of 3 opportunities at a time.');
+      if (state.compare.length >= 4) {
+        alert('You can compare up to 4 opportunities side by side.');
         return;
       }
       state.compare.push(id);
@@ -495,297 +843,169 @@
   }
 
   function updateCompareDrawer() {
+    if (!els.compareDrawer) return;
     if (state.compare.length > 0) {
-      els.compareDrawer.classList.add('active');
-      els.compareBadgeCount.textContent = state.compare.length;
+      els.compareDrawer.style.display = 'flex';
+      if (els.compareBadgeCount) els.compareBadgeCount.textContent = state.compare.length;
     } else {
-      els.compareDrawer.classList.remove('active');
+      els.compareDrawer.style.display = 'none';
     }
   }
 
-  // Filtering Logic
-  function getFilteredOpportunities() {
-    const today = new Date().toISOString().slice(0, 10);
+  function openCompareModal() {
+    if (!els.compareTableContainer || !state.compare.length) return;
 
-    return state.opportunities.filter(item => {
-      // 1. Specific Provider slug filter
-      if (state.selectedProviderSlug && item.provider.slug !== state.selectedProviderSlug) {
-        return false;
-      }
+    const items = state.opportunities.filter(o => state.compare.includes(o.id));
 
-      // 2. Section (All, India, Abroad)
-      if (state.section !== 'all' && state.section !== 'providers' && item.section !== state.section) {
-        return false;
-      }
+    els.compareTableContainer.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border);">
+            <th style="padding: 10px; width: 140px;">Feature</th>
+            ${items.map(it => `
+              <th style="padding: 10px; min-width: 200px;">
+                <div style="font-weight: 700;">${it.title}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">${it.provider.name}</div>
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px; font-weight: 600;">Amount</td>
+            ${items.map(it => `<td style="padding: 10px; font-weight: 700; color: var(--ink-blue);">${it.fundingAmount}</td>`).join('')}
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px; font-weight: 600;">Location</td>
+            ${items.map(it => `<td style="padding: 10px;">${it.section === 'india' ? 'India' : (it.country || 'Abroad')}</td>`).join('')}
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px; font-weight: 600;">Eligibility</td>
+            ${items.map(it => `<td style="padding: 10px; font-size: 0.88rem;">${it.eligibility}</td>`).join('')}
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px; font-weight: 600;">Stages</td>
+            ${items.map(it => `<td style="padding: 10px;">${(it.educationLevel || []).join(', ')}</td>`).join('')}
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px; font-weight: 600;">Deadline</td>
+            ${items.map(it => `<td style="padding: 10px;">${it.deadline || it.deadlineText}</td>`).join('')}
+          </tr>
+          <tr>
+            <td style="padding: 10px;"></td>
+            ${items.map(it => `
+              <td style="padding: 10px;">
+                <a href="${it.officialLink}" target="_blank" rel="noopener noreferrer" class="pill-btn small primary">
+                  Official page
+                </a>
+              </td>
+            `).join('')}
+          </tr>
+        </tbody>
+      </table>
+    `;
 
-      // 3. Education level
-      if (state.level !== 'all' && !item.educationLevel.includes(state.level)) {
-        return false;
-      }
-
-      // 4. Status Filter (Honest filtering respecting dateConfidence)
-      if (state.status !== 'all') {
-        if (state.status === 'open') {
-          // Open now and confirmed
-          if (item.dateConfidence !== 'confirmed' || item.status !== 'open') return false;
-          if (item.deadline && item.deadline < today) return false;
-          if (item.openDate && item.openDate > today) return false;
-        } else if (state.status === 'closing-soon') {
-          if (item.dateConfidence !== 'confirmed' || !item.deadline || item.deadline < today) return false;
-          const diffDays = (new Date(item.deadline) - new Date(today)) / (1000 * 60 * 60 * 24);
-          if (diffDays > 30) return false;
-        } else if (state.status === 'upcoming') {
-          if (item.status !== 'upcoming' && !(item.openDate && item.openDate > today)) return false;
-        } else if (state.status === 'expected') {
-          if (item.dateConfidence !== 'expected') return false;
-        } else if (state.status === 'rolling') {
-          if (item.status !== 'rolling') return false;
-        } else if (state.status === 'closed') {
-          if (item.status !== 'closed' && (!item.deadline || item.deadline >= today)) return false;
-        } else if (item.status !== state.status) {
-          return false;
-        }
-      }
-
-      // 5. Category Filter
-      if (state.category !== 'all' && item.category !== state.category) {
-        return false;
-      }
-
-      // 6. Country Filter
-      if (state.country !== 'all') {
-        if (!item.country || !item.country.toLowerCase().includes(state.country.toLowerCase())) {
-          return false;
-        }
-      }
-
-      // 7. State Filter
-      if (state.stateFilter !== 'all') {
-        if (!item.state || item.state !== state.stateFilter) {
-          return false;
-        }
-      }
-
-      // 8. Target Group / Quota
-      if (state.target !== 'all') {
-        const tgStr = item.targetGroup.join(' ').toLowerCase();
-        if (state.target === 'women' && !tgStr.includes('women') && !tgStr.includes('girl')) return false;
-        if (state.target === 'sc' && !tgStr.includes('sc') && !tgStr.includes('scheduled caste')) return false;
-        if (state.target === 'st' && !tgStr.includes('st') && !tgStr.includes('scheduled tribe')) return false;
-        if (state.target === 'obc' && !tgStr.includes('obc') && !tgStr.includes('backward')) return false;
-        if (state.target === 'minority' && !tgStr.includes('minority')) return false;
-        if (state.target === 'pwd' && !tgStr.includes('pwd') && !tgStr.includes('disab')) return false;
-        if (state.target === 'merit' && !tgStr.includes('merit')) return false;
-      }
-
-      // 9. Income Limit
-      if (state.income !== 'all') {
-        const cap = parseInt(state.income, 10);
-        if (item.incomeLimitINR !== null && item.incomeLimitINR > cap) {
-          return false;
-        }
-      }
-
-      // 10. Quick Chips
-      if (state.activeChip) {
-        switch (state.activeChip) {
-          case 'after12':
-            if (!item.educationLevel.includes('After 12th')) return false;
-            break;
-          case 'bachelor':
-            if (!item.educationLevel.includes('Bachelor')) return false;
-            break;
-          case 'master':
-            if (!item.educationLevel.includes('Master')) return false;
-            break;
-          case 'phd':
-            if (!item.educationLevel.includes('PhD')) return false;
-            break;
-          case 'postdoc':
-            if (!item.educationLevel.includes('Postdoc')) return false;
-            break;
-          case 'women':
-            if (!item.targetGroup.some(t => t.toLowerCase().includes('women') || t.toLowerCase().includes('girl'))) return false;
-            break;
-          case 'govt':
-            if (item.type !== 'government') return false;
-            break;
-          case 'abroad':
-            if (item.section !== 'abroad') return false;
-            break;
-          case 'intern':
-            if (item.category !== 'Internship') return false;
-            break;
-          case 'jrf':
-            if (!item.category.includes('Project Position')) return false;
-            break;
-        }
-      }
-
-      // 11. Search Query
-      if (state.searchQuery.trim() !== '') {
-        const q = state.searchQuery.toLowerCase();
-        const inTitle = item.title.toLowerCase().includes(q);
-        const inAgency = item.provider.name.toLowerCase().includes(q);
-        const inEligibility = item.eligibility.toLowerCase().includes(q);
-        const inTags = item.tags.some(t => t.toLowerCase().includes(q));
-        const inStreams = item.streams.some(s => s.toLowerCase().includes(q));
-
-        if (!inTitle && !inAgency && !inEligibility && !inTags && !inStreams) {
-          return false;
-        }
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (state.sort === 'amount-high') {
-        return (b.amountValINR || 0) - (a.amountValINR || 0);
-      }
-      if (state.sort === 'title-asc') {
-        return a.title.localeCompare(b.title);
-      }
-      return 0;
-    });
+    if (els.compareModal) els.compareModal.style.display = 'flex';
   }
 
-  // Render Opportunities Cards
-  function renderCards() {
-    if (state.section === 'providers') {
-      els.cardsGridContainer.style.display = 'none';
-      els.filterSection.style.display = 'none';
-      els.resultsMeta.style.display = 'none';
-      els.providersContainer.style.display = 'block';
-      return;
+  function closeCompareModal() {
+    if (els.compareModal) els.compareModal.style.display = 'none';
+  }
+
+  // --------------------------------------------------------------------------
+  // Bookmarks / Saved Opportunities
+  // --------------------------------------------------------------------------
+  function isBookmarked(id) {
+    return state.bookmarks.includes(id);
+  }
+
+  function toggleBookmark(id) {
+    const idx = state.bookmarks.indexOf(id);
+    if (idx > -1) {
+      state.bookmarks.splice(idx, 1);
     } else {
-      els.cardsGridContainer.style.display = 'grid';
-      els.filterSection.style.display = 'block';
-      els.resultsMeta.style.display = 'flex';
-      els.providersContainer.style.display = 'none';
+      state.bookmarks.push(id);
     }
+    safeLocalStorage('set', 'vidyasetu_bookmarks', JSON.stringify(state.bookmarks));
+    updateBookmarkBadge();
+    updateModalBookmarkBtn(id);
+    renderCards();
+  }
 
-    const list = getFilteredOpportunities();
+  function updateBookmarkBadge() {
+    if (els.savedCountBadge) {
+      els.savedCountBadge.textContent = state.bookmarks.length;
+    }
+  }
 
-    els.resultsCountText.innerHTML = `Showing <span>${list.length}</span> ${
-      state.selectedProviderSlug ? `Opportunities from ${state.selectedProviderSlug}` :
-      state.section === 'india' ? 'Opportunities in India' : 
-      state.section === 'abroad' ? 'Opportunities Abroad' : 
-      'Verified Opportunities'
-    }`;
+  function updateModalBookmarkBtn(id) {
+    if (!els.modalBookmarkBtn) return;
+    const bookmarked = isBookmarked(id);
+    els.modalBookmarkBtn.textContent = bookmarked ? 'Saved' : 'Save';
+    els.modalBookmarkBtn.onclick = () => toggleBookmark(id);
+  }
 
-    if (list.length === 0) {
-      els.cardsGridContainer.innerHTML = '';
-      els.noResultsState.style.display = 'block';
-      return;
+  function openBookmarksModal() {
+    if (!els.bookmarksListBody) return;
+
+    const saved = state.opportunities.filter(o => state.bookmarks.includes(o.id));
+
+    if (saved.length === 0) {
+      els.bookmarksListBody.innerHTML = `
+        <div class="empty-state-box">
+          <h3>No opportunities saved yet</h3>
+          <p>Click "Save" on any opportunity to keep it here for quick access.</p>
+        </div>
+      `;
     } else {
-      els.noResultsState.style.display = 'none';
-    }
-
-    if (state.viewMode === 'compact') {
-      els.cardsGridContainer.style.gridTemplateColumns = '1fr';
-    } else {
-      els.cardsGridContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(400px, 1fr))';
-    }
-
-    els.cardsGridContainer.innerHTML = list.map(item => {
-      const bookmarked = isBookmarked(item.id);
-      const compared = isInCompare(item.id);
-      const isIndia = item.section === 'india';
-
-      const sectionBadge = isIndia 
-        ? '<span class="badge badge-india">🇮🇳 India</span>'
-        : `<span class="badge badge-abroad">🌍 ${item.country || 'Abroad'}</span>`;
-
-      const typeBadge = item.type === 'government'
-        ? '<span class="badge badge-gov">🏛️ Govt Fund</span>'
-        : item.type === 'university'
-        ? '<span class="badge badge-uni">🎓 University</span>'
-        : '<span class="badge badge-pvt">💼 Private CSR</span>';
-
-      const statusBadge = renderStatusBadge(item);
-      const verBadge = getVerificationBadgeHtml(item);
-      const levelPills = item.educationLevel.map(l => `<span class="level-tag">${l}</span>`).join('');
-
-      return `
-        <article class="opportunity-card" data-id="${item.id}">
-          <div class="card-top-bar">
-            <div class="badge-group">
-              ${sectionBadge}
-              ${typeBadge}
-              ${statusBadge}
-            </div>
-
-            <div class="card-actions-quick">
-              <button 
-                class="action-icon-btn ${bookmarked ? 'bookmarked' : ''}" 
-                onclick="window.VidyaSetu.toggleBookmark('${item.id}')" 
-                title="${bookmarked ? 'Remove Bookmark' : 'Save Scheme'}"
-              >
-                ${bookmarked ? '★' : '☆'}
-              </button>
-
-              <button 
-                class="action-icon-btn" 
-                onclick="window.VidyaSetu.toggleCompare('${item.id}')" 
-                title="${compared ? 'Remove from compare' : 'Add to compare'}"
-                style="color: ${compared ? 'var(--brand-primary)' : 'inherit'}; font-weight: bold;"
-              >
-                ${compared ? '✓' : '⚖️'}
-              </button>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <a href="#/provider/${item.provider.slug}" class="agency-label-link" title="View all from this provider">
-              🏛️ ${item.provider.name} <span>→</span>
-            </a>
-            <h3 class="card-title" onclick="window.VidyaSetu.openDetailModal('${item.id}')">${item.title}</h3>
-
-            <!-- Funding Highlight -->
-            <div class="funding-highlight">
-              <div class="funding-amount">
-                <span>💰</span> ${item.fundingAmount}
+      els.bookmarksListBody.innerHTML = `
+        <div class="opportunities-list">
+          ${saved.map(it => `
+            <div class="opportunity-row">
+              <div class="row-main">
+                <div class="row-provider-line">
+                  <span>${it.provider.name}</span>
+                </div>
+                <h4 class="row-title">
+                  <a href="#/opportunity/${it.id}" onclick="window.VidyaSetu.openDetailModal('${it.id}'); return false;">
+                    ${it.title}
+                  </a>
+                </h4>
+                <div class="row-meta-line">
+                  <span>${it.fundingAmount}</span>
+                  <span>•</span>
+                  <span>${it.deadline || it.deadlineText}</span>
+                </div>
+              </div>
+              <div class="row-side-actions">
+                <button class="pill-btn small text-only" onclick="window.VidyaSetu.toggleBookmark('${it.id}'); window.VidyaSetu.openBookmarksModal();">
+                  Remove
+                </button>
               </div>
             </div>
-
-            <!-- Target Levels -->
-            <div class="levels-pills">
-              ${levelPills}
-            </div>
-
-            <p class="card-snippet">
-              <strong>Eligibility:</strong> ${item.eligibility}
-            </p>
-          </div>
-
-          <div class="card-footer">
-            <div class="deadline-indicator">
-              <span class="deadline-label">${item.dateConfidence === 'confirmed' ? 'Confirmed Deadline' : 'Expected Timeline'}</span>
-              <span class="deadline-val">📅 ${item.deadline || item.deadlineText}</span>
-              ${verBadge}
-            </div>
-
-            <div class="card-buttons">
-              <button class="btn-details" onclick="window.VidyaSetu.openDetailModal('${item.id}')">
-                Details & Docs
-              </button>
-              <a href="${item.officialLink}" target="_blank" rel="noopener noreferrer" class="btn-apply-direct" title="Opens official portal">
-                Apply <span>↗</span>
-              </a>
-            </div>
-          </div>
-        </article>
+          `).join('')}
+        </div>
       `;
-    }).join('');
+    }
+
+    if (els.bookmarksModal) els.bookmarksModal.style.display = 'flex';
   }
 
-  // Render Providers Directory (Phase 4)
-  function renderProviders() {
-    const providersMap = new Map();
+  function closeBookmarksModal() {
+    if (els.bookmarksModal) els.bookmarksModal.style.display = 'none';
+  }
 
+  // --------------------------------------------------------------------------
+  // Providers Directory View
+  // --------------------------------------------------------------------------
+  function renderProviders() {
+    if (!els.providersGrid || !state.opportunities.length) return;
+
+    const map = new Map();
     state.opportunities.forEach(it => {
       const slug = it.provider.slug;
-      if (!providersMap.has(slug)) {
-        providersMap.set(slug, {
+      if (!map.has(slug)) {
+        map.set(slug, {
           name: it.provider.name,
           slug: it.provider.slug,
           kind: it.provider.kind,
@@ -794,200 +1014,60 @@
           opportunities: []
         });
       }
-      providersMap.get(slug).opportunities.push(it);
+      map.get(slug).opportunities.push(it);
     });
 
-    const providers = Array.from(providersMap.values()).filter(p => {
-      if (state.providerKind !== 'all' && p.kind !== state.providerKind) return false;
-      if (state.providerSearch.trim() !== '') {
-        const q = state.providerSearch.toLowerCase();
-        if (!p.name.toLowerCase().includes(q)) return false;
-      }
-      return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    const providers = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
 
     els.providersGrid.innerHTML = providers.map(p => `
-      <div class="provider-card">
-        <div>
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-            <span class="badge ${p.section === 'india' ? 'badge-india' : 'badge-abroad'}">${p.section === 'india' ? '🇮🇳 India' : '🌍 Abroad'}</span>
-            <span class="badge badge-uni">${p.kind.toUpperCase()}</span>
+      <div class="opportunity-row">
+        <div class="row-main">
+          <div class="row-provider-line">
+            <span>${p.section === 'india' ? 'India' : 'Abroad'}</span>
+            <span>•</span>
+            <span style="text-transform: capitalize;">${p.kind}</span>
           </div>
-          <h3 style="font-size: 1.15rem; margin-bottom: 6px;">${p.name}</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-            ${p.opportunities.length} Total Verified Scheme(s) / Post(s)
+          <h3 class="row-title">
+            <a href="#/provider/${p.slug}">
+              ${p.name}
+            </a>
+          </h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">
+            ${p.opportunities.length} listed opportunity / research position(s).
           </p>
         </div>
-        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
-          <a href="#/provider/${p.slug}" class="nav-btn primary" style="font-size: 0.82rem; flex: 1; text-align: center; justify-content: center;">
-            View All Opportunities (${p.opportunities.length})
+        <div class="row-side-actions">
+          <a href="#/provider/${p.slug}" class="pill-btn small primary">
+            View schemes (${p.opportunities.length})
           </a>
-          <a href="${p.website}" target="_blank" rel="noopener noreferrer" class="nav-btn" style="font-size: 0.82rem;" title="Official Website">
-            Website ↗
+          <a href="${p.website}" target="_blank" rel="noopener noreferrer" class="pill-btn small text-only">
+            Provider site
           </a>
         </div>
       </div>
     `).join('');
   }
 
-  // Open Full Detail Modal with Google Cal & .ics
-  function openDetailModal(id) {
-    const item = state.opportunities.find(o => o.id === id);
-    if (!item) return;
-
-    activeModalItem = item;
-
-    // Badges
-    const isIndia = item.section === 'india';
-    els.modalBadgeGroup.innerHTML = `
-      <span class="badge ${isIndia ? 'badge-india' : 'badge-abroad'}">${isIndia ? '🇮🇳 India' : '🌍 ' + item.country}</span>
-      <span class="badge badge-gov">${item.type.toUpperCase()}</span>
-      <span class="badge badge-intern">${item.category}</span>
-      ${renderStatusBadge(item)}
-      ${getVerificationBadgeHtml(item)}
-    `;
-
-    els.modalTitle.textContent = item.title;
-    els.modalAgency.textContent = item.provider.name;
-    els.modalAmount.textContent = item.fundingAmount;
-    els.modalCoverage.textContent = `Provider Website: ${item.provider.website}`;
-    els.modalEligibility.textContent = item.eligibility;
-
-    // Display Official Evidence Quote if confirmed
-    let evidenceBox = document.getElementById('modalEvidenceBox');
-    if (!evidenceBox) {
-      evidenceBox = document.createElement('div');
-      evidenceBox.id = 'modalEvidenceBox';
-      els.modalEligibility.parentElement.appendChild(evidenceBox);
-    }
-    if (item.evidence) {
-      evidenceBox.innerHTML = `
-        <div class="detail-box" style="border-left: 3px solid #10b981; margin-top: 14px; background: rgba(16, 185, 129, 0.05); padding: 12px; border-radius: 6px;">
-          <h4 style="color: #059669; margin-bottom: 6px; font-size: 0.85rem;">📋 Official Source Verification Evidence</h4>
-          <p style="font-size: 0.82rem; color: var(--text-secondary); font-style: italic; margin-bottom: 6px; line-height: 1.5;">"${item.evidence}"</p>
-          <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">Verified from official page: <a href="${item.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--brand-primary); word-break: break-all;">${item.sourceUrl}</a></p>
-        </div>
-      `;
-      evidenceBox.style.display = 'block';
+  // --------------------------------------------------------------------------
+  // Document Check Persistence
+  // --------------------------------------------------------------------------
+  function toggleDocCheck(oppId, docIdx, checked) {
+    const key = `vidyasetu_docs_${oppId}`;
+    const saved = JSON.parse(safeLocalStorage('get', key) || '{}');
+    if (checked) {
+      saved[docIdx] = true;
     } else {
-      evidenceBox.style.display = 'none';
+      delete saved[docIdx];
     }
-
-    // Guidelines link button
-    let guidelinesBtn = document.getElementById('modalGuidelinesLink');
-    if (!guidelinesBtn) {
-      guidelinesBtn = document.createElement('a');
-      guidelinesBtn.id = 'modalGuidelinesLink';
-      guidelinesBtn.className = 'nav-btn';
-      guidelinesBtn.target = '_blank';
-      guidelinesBtn.rel = 'noopener noreferrer';
-      guidelinesBtn.style.fontSize = '0.82rem';
-      guidelinesBtn.textContent = 'Guidelines PDF / Notice ↗';
-      els.modalOfficialLink.parentElement.insertBefore(guidelinesBtn, els.modalOfficialLink);
-    }
-    if (item.guidelinesLink) {
-      guidelinesBtn.href = item.guidelinesLink;
-      guidelinesBtn.style.display = 'inline-flex';
-    } else {
-      guidelinesBtn.style.display = 'none';
-    }
-
-    // Levels & Streams
-    els.modalLevels.innerHTML = item.educationLevel.map(l => `<span class="level-tag" style="font-size: 0.82rem; padding: 5px 12px;">${l}</span>`).join('');
-    els.modalStreams.innerHTML = item.streams.map(s => `<span class="level-tag" style="font-size: 0.82rem; padding: 5px 12px; background: rgba(37, 99, 235, 0.08); color: var(--brand-primary);">${s}</span>`).join('');
-
-    // Document Checklist
-    els.modalDocChecklist.innerHTML = item.documentsRequired.map((doc, idx) => `
-      <label class="checklist-item" id="docLabel_${idx}">
-        <input type="checkbox" onchange="this.parentElement.style.opacity = this.checked ? '0.6' : '1'">
-        <span>${doc}</span>
-      </label>
-    `).join('');
-
-    // Application Steps
-    els.modalApplicationSteps.innerHTML = item.applicationProcess.map((step, idx) => `
-      <div class="step-card">
-        <div class="step-number">${idx + 1}</div>
-        <div style="font-size: 0.88rem; color: var(--text-secondary); padding-top: 2px;">${step}</div>
-      </div>
-    `).join('');
-
-    // Deadline & Calendar Links (Phase 5)
-    els.modalDeadline.textContent = item.deadline ? `${item.deadline} (${item.deadlineText})` : item.deadlineText;
-    setupCalendarExports(item);
-
-    // Official and report broken links
-    els.modalOfficialLink.href = item.officialLink;
-    const reportUrl = `https://github.com/mdsamhussain1996/vidyasetu-scholarship-portal/issues/new?template=report_broken_link.yml&title=%5BReport%5D+Issue+with+${encodeURIComponent(item.title)}&opportunity_id=${encodeURIComponent(item.id)}&current_link=${encodeURIComponent(item.officialLink)}`;
-    els.modalReportBrokenBtn.href = reportUrl;
-
-    updateModalBookmarkBtn();
-
-    els.detailModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    // Update URL hash for sharing
-    window.location.hash = `/opportunity/${item.id}`;
+    safeLocalStorage('set', key, JSON.stringify(saved));
   }
 
-  function setupCalendarExports(item) {
-    if (!item.deadline) {
-      els.btnModalGoogleCal.style.display = 'none';
-      els.btnModalICS.style.display = 'none';
-      return;
-    }
-
-    els.btnModalGoogleCal.style.display = 'inline-flex';
-    els.btnModalICS.style.display = 'inline-flex';
-
-    // Google Calendar URL
-    const dateFormatted = item.deadline.replace(/-/g, '');
-    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Deadline: ' + item.title)}&dates=${dateFormatted}/${dateFormatted}&details=${encodeURIComponent('Official Application Link: ' + item.officialLink + '\n\nEligibility: ' + item.eligibility)}&location=${encodeURIComponent(item.provider.name)}`;
-    els.btnModalGoogleCal.href = gCalUrl;
-
-    // .ics file generator
-    els.btnModalICS.onclick = () => {
-      const icsData = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//VidyaSetu//Scholarship Deadlines//EN
-BEGIN:VEVENT
-SUMMARY:Application Deadline: ${item.title}
-DESCRIPTION:Official Portal: ${item.officialLink}\\n\\nProvider: ${item.provider.name}
-DTSTART;VALUE=DATE:${dateFormatted}
-DTEND;VALUE=DATE:${dateFormatted}
-LOCATION:${item.provider.name}
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
-      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${item.id}-deadline.ics`;
-      link.click();
-      URL.revokeObjectURL(url);
-    };
-  }
-
-  function updateModalBookmarkBtn() {
-    if (!activeModalItem) return;
-    const bookmarked = isBookmarked(activeModalItem.id);
-    els.modalBookmarkBtn.innerHTML = bookmarked ? '★ Bookmarked' : '☆ Save Scheme';
-    els.modalBookmarkBtn.style.color = bookmarked ? '#f59e0b' : 'inherit';
-  }
-
-  function closeDetailModal() {
-    els.detailModal.classList.remove('active');
-    document.body.style.overflow = '';
-    activeModalItem = null;
-    if (window.location.hash.startsWith('#/opportunity/')) {
-      window.location.hash = '';
-    }
-  }
-
-  // Hash Routing & Deep Linking (Phase 5)
+  // --------------------------------------------------------------------------
+  // Hash Routing
+  // --------------------------------------------------------------------------
   function handleHashRouting() {
     window.addEventListener('hashchange', checkHashDeepLink);
+    checkHashDeepLink();
   }
 
   function checkHashDeepLink() {
@@ -997,449 +1077,378 @@ END:VCALENDAR`;
       openDetailModal(oppId);
     } else if (hash.startsWith('#/provider/')) {
       const slug = hash.replace('#/provider/', '');
-      state.selectedProviderSlug = slug;
       state.section = 'all';
-      updateSectionTabsUI();
+      state.searchQuery = slug.replace(/-/g, ' ');
+      if (els.searchInput) els.searchInput.value = state.searchQuery;
       renderCards();
+      scrollToResults();
     } else if (hash === '#/providers') {
       state.section = 'providers';
-      updateSectionTabsUI();
       renderCards();
     }
   }
 
-  function updateSectionTabsUI() {
-    [els.tabSectionAll, els.tabSectionIndia, els.tabSectionAbroad, els.tabSectionProviders].forEach(t => t.classList.remove('active'));
-    if (state.section === 'india') els.tabSectionIndia.classList.add('active');
-    else if (state.section === 'abroad') els.tabSectionAbroad.classList.add('active');
-    else if (state.section === 'providers') els.tabSectionProviders.classList.add('active');
-    else els.tabSectionAll.classList.add('active');
+  // --------------------------------------------------------------------------
+  // Theme Toggle (Dark / Light)
+  // --------------------------------------------------------------------------
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    state.theme = theme;
+    safeLocalStorage('set', 'vidyasetu_theme', theme);
   }
 
-  // Profile Matching Wizard
-  function openWizardModal() {
-    els.wizardModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+  function toggleTheme() {
+    const next = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
   }
 
-  function closeWizardModal() {
-    els.wizardModal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  function applyWizard() {
-    const level = els.wizLevel.value;
-    const stream = els.wizStream.value;
-    const category = els.wizCategory.value;
-    const destination = els.wizDestination.value;
-
-    state.level = level;
-    els.filterLevel.value = level;
-
-    if (stream !== 'All Disciplines') {
-      state.searchQuery = stream;
-      els.searchInput.value = stream;
+  // --------------------------------------------------------------------------
+  // Language Switch
+  // --------------------------------------------------------------------------
+  function toggleLanguage() {
+    const next = state.lang === 'hi' ? 'en' : 'hi';
+    state.lang = next;
+    safeLocalStorage('set', 'vidyasetu_lang', next);
+    if (els.langToggleBtn) {
+      els.langToggleBtn.textContent = next === 'hi' ? 'Read in English' : 'हिंदी में पढ़ें';
     }
-
-    if (destination !== 'all') {
-      state.section = destination;
-    } else {
-      state.section = 'all';
-    }
-
-    if (category === 'women') {
-      state.target = 'women';
-      els.filterTarget.value = 'women';
-    } else if (category === 'means') {
-      state.income = '450000';
-      els.filterIncome.value = '450000';
-    }
-
-    updateSectionTabsUI();
-    closeWizardModal();
-    renderCards();
-    els.resultsCountText.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Dynamic Deadline Calendar (Uses ONLY confirmed dates)
-  function openCalendarModal() {
-    const quarters = { Q1: [], Q2: [], Q3: [], Q4: [] };
-
-    // Part 3: Calendar must use only confirmed dates
-    const confirmedItems = state.opportunities.filter(it => it.dateConfidence === 'confirmed' && it.deadline);
-
-    confirmedItems.forEach(it => {
-      const text = it.deadline;
-      if (text.includes('-01-') || text.includes('-02-') || text.includes('-03-')) {
-        quarters.Q1.push(it);
-      } else if (text.includes('-04-') || text.includes('-05-') || text.includes('-06-')) {
-        quarters.Q2.push(it);
-      } else if (text.includes('-07-') || text.includes('-08-') || text.includes('-09-')) {
-        quarters.Q3.push(it);
-      } else {
-        quarters.Q4.push(it);
+  // --------------------------------------------------------------------------
+  // Helpers & Utility
+  // --------------------------------------------------------------------------
+  function formatShortDate(isoDate) {
+    if (!isoDate) return '';
+    try {
+      const parts = isoDate.split('-');
+      if (parts.length === 3) {
+        const d = parseInt(parts[2], 10);
+        const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(parts[1], 10) - 1];
+        return `${d} ${m}`;
       }
-    });
-
-    els.dynamicCalendarGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); padding: 8px 12px; background: rgba(37, 99, 235, 0.06); border-radius: 6px;">
-        📅 Showing <strong>${confirmedItems.length} schemes with confirmed application deadlines</strong> for current rounds. Unconfirmed/expected rounds are omitted from calendar alerts until dates are officially published.
-      </div>
-      <div class="detail-box">
-        <h4 style="color: #2563eb; margin-bottom: 8px;">❄️ Jan - Mar (Q1) - ${quarters.Q1.length} Confirmed Schemes</h4>
-        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q1.length ? quarters.Q1.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
-        </ul>
-      </div>
-      <div class="detail-box">
-        <h4 style="color: #059669; margin-bottom: 8px;">🌸 Apr - Jun (Q2) - ${quarters.Q2.length} Confirmed Schemes</h4>
-        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q2.length ? quarters.Q2.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
-        </ul>
-      </div>
-      <div class="detail-box">
-        <h4 style="color: #d97706; margin-bottom: 8px;">☀️ Jul - Sep (Q3) - ${quarters.Q3.length} Confirmed Schemes</h4>
-        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q3.length ? quarters.Q3.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
-        </ul>
-      </div>
-      <div class="detail-box">
-        <h4 style="color: #7c3aed; margin-bottom: 8px;">🍂 Oct - Dec (Q4) - ${quarters.Q4.length} Confirmed Schemes</h4>
-        <ul style="font-size: 0.82rem; padding-left: 18px; line-height: 1.6; color: var(--text-secondary);">
-          ${quarters.Q4.length ? quarters.Q4.map(it => `<li><strong>${it.title.slice(0, 32)}...:</strong> Closes ${it.deadline}</li>`).join('') : '<li>No confirmed deadlines in this quarter</li>'}
-        </ul>
-      </div>
-    `;
-
-    els.calendarModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    } catch (e) {}
+    return isoDate;
   }
 
-  function closeCalendarModal() {
-    els.calendarModal.classList.remove('active');
-    document.body.style.overflow = '';
+  function scrollToResults() {
+    if (els.resultsSection) {
+      els.resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
-  // Side-by-Side Comparison
-  function openComparisonModal() {
-    if (state.compare.length === 0) return;
-    const items = state.opportunities.filter(o => state.compare.includes(o.id));
+  // --------------------------------------------------------------------------
+  // Event Listeners Binding
+  // --------------------------------------------------------------------------
+  function bindEvents() {
+    // Theme & Lang
+    if (els.themeToggleBtn) els.themeToggleBtn.addEventListener('click', toggleTheme);
+    if (els.langToggleBtn) els.langToggleBtn.addEventListener('click', toggleLanguage);
 
-    let html = `
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
-        <thead>
-          <tr style="background: var(--bg-primary); border-bottom: 2px solid var(--border-color);">
-            <th style="padding: 14px; min-width: 140px;">Feature</th>
-            ${items.map(it => `
-              <th style="padding: 14px; min-width: 240px; vertical-align: top;">
-                <div style="font-size: 1rem; font-weight: 700; margin-bottom: 6px;">${it.title}</div>
-                <span class="badge ${it.section === 'india' ? 'badge-india' : 'badge-abroad'}">${it.section === 'india' ? 'India' : it.country}</span>
-              </th>
-            `).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 12px 14px; font-weight: 700;">Funding Agency</td>
-            ${items.map(it => `<td style="padding: 12px 14px;">${it.provider.name}</td>`).join('')}
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color); background: rgba(37, 99, 235, 0.04);">
-            <td style="padding: 12px 14px; font-weight: 700; color: var(--brand-primary);">Amount & Stipend</td>
-            ${items.map(it => `<td style="padding: 12px 14px; font-weight: 700; color: var(--brand-primary);">${it.fundingAmount}</td>`).join('')}
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 12px 14px; font-weight: 700;">Education Level</td>
-            ${items.map(it => `<td style="padding: 12px 14px;">${it.educationLevel.join(', ')}</td>`).join('')}
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 12px 14px; font-weight: 700;">Eligibility</td>
-            ${items.map(it => `<td style="padding: 12px 14px;">${it.eligibility}</td>`).join('')}
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 12px 14px; font-weight: 700;">Deadline</td>
-            ${items.map(it => `<td style="padding: 12px 14px; font-weight: 600;">${it.deadline || it.deadlineText}</td>`).join('')}
-          </tr>
-          <tr>
-            <td style="padding: 14px; font-weight: 700;">Official Link</td>
-            ${items.map(it => `
-              <td style="padding: 14px;">
-                <a href="${it.officialLink}" target="_blank" rel="noopener noreferrer" class="btn-apply-direct" style="padding: 6px 14px;">
-                  Apply Official <span>↗</span>
-                </a>
-              </td>
-            `).join('')}
-          </tr>
-        </tbody>
-      </table>
-    `;
-
-    els.compareTableContainer.innerHTML = html;
-    els.compareModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeComparisonModal() {
-    els.compareModal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  // Bookmarks Modal
-  function openBookmarksModal() {
-    const list = state.opportunities.filter(o => state.bookmarks.includes(o.id));
-    if (list.length === 0) {
-      els.bookmarksListBody.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px;">
-          <div style="font-size: 2.5rem; margin-bottom: 10px;">⭐</div>
-          <h4>No schemes saved yet</h4>
-          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px;">
-            Click the star icon (☆) on any scholarship card to save it for quick review.
-          </p>
-        </div>
-      `;
-    } else {
-      els.bookmarksListBody.innerHTML = list.map(item => `
-        <div class="detail-box" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
-          <div style="flex: 1;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${item.provider.name}</div>
-            <h4 style="font-size: 1rem; margin: 2px 0 6px;">${item.title}</h4>
-            <div style="font-size: 0.85rem; font-weight: 700; color: var(--brand-primary);">${item.fundingAmount}</div>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-details" onclick="window.VidyaSetu.openDetailModal('${item.id}'); window.VidyaSetu.closeBookmarksModal();">
-              View
-            </button>
-            <button class="action-icon-btn bookmarked" onclick="window.VidyaSetu.toggleBookmark('${item.id}'); window.VidyaSetu.openBookmarksModal();" title="Remove">
-              ✕
-            </button>
-          </div>
-        </div>
-      `).join('');
+    // Mobile Navigation Menu Toggle
+    if (els.mobileMenuBtn && els.mainNavLinks) {
+      els.mobileMenuBtn.addEventListener('click', () => {
+        els.mainNavLinks.classList.toggle('mobile-open');
+      });
     }
 
-    els.bookmarksModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
+    // Logo click resets to home
+    if (els.logoBrand) {
+      els.logoBrand.addEventListener('click', () => {
+        window.location.hash = '';
+        state.section = 'all';
+        state.level = 'all';
+        state.searchQuery = '';
+        if (els.searchInput) els.searchInput.value = '';
+        renderCards();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
 
-  function closeBookmarksModal() {
-    els.bookmarksModal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
+    // Hero selects
+    if (els.heroStage) els.heroStage.addEventListener('change', updateHeroSummary);
+    if (els.heroPlace) els.heroPlace.addEventListener('change', updateHeroSummary);
+    if (els.heroKind) els.heroKind.addEventListener('change', updateHeroSummary);
 
-  // Reset Filters
-  function resetAllFilters() {
-    state.searchQuery = '';
-    state.level = 'all';
-    state.status = 'all';
-    state.category = 'all';
-    state.country = 'all';
-    state.stateFilter = 'all';
-    state.target = 'all';
-    state.income = 'all';
-    state.sort = 'default';
-    state.activeChip = null;
-    state.selectedProviderSlug = null;
+    // Hero Show All Button
+    if (els.btnHeroShowAll) {
+      els.btnHeroShowAll.addEventListener('click', () => {
+        const stage = els.heroStage ? els.heroStage.value : 'After 12th';
+        const place = els.heroPlace ? els.heroPlace.value : 'all';
+        const kind = els.heroKind ? els.heroKind.value : 'all';
 
-    els.searchInput.value = '';
-    els.filterLevel.value = 'all';
-    els.filterStatus.value = 'all';
-    els.filterCategory.value = 'all';
-    els.filterCountry.value = 'all';
-    els.filterState.value = 'all';
-    els.filterTarget.value = 'all';
-    els.filterIncome.value = 'all';
+        state.level = stage;
+        state.section = place;
 
-    els.chips.forEach(c => c.classList.remove('active'));
-    renderCards();
-  }
-
-  // Event Listeners Binding
-  function bindEvents() {
-    els.themeToggleBtn.addEventListener('click', toggleTheme);
-    els.langToggleBtn.addEventListener('click', toggleLanguage);
-
-    // Section tabs
-    els.tabSectionAll.addEventListener('click', () => {
-      state.section = 'all';
-      state.selectedProviderSlug = null;
-      updateSectionTabsUI();
-      renderCards();
-    });
-    els.tabSectionIndia.addEventListener('click', () => {
-      state.section = 'india';
-      state.selectedProviderSlug = null;
-      updateSectionTabsUI();
-      renderCards();
-    });
-    els.tabSectionAbroad.addEventListener('click', () => {
-      state.section = 'abroad';
-      state.selectedProviderSlug = null;
-      updateSectionTabsUI();
-      renderCards();
-    });
-    els.tabSectionProviders.addEventListener('click', () => {
-      state.section = 'providers';
-      updateSectionTabsUI();
-      renderCards();
-    });
-
-    // Inputs
-    els.searchInput.addEventListener('input', (e) => {
-      state.searchQuery = e.target.value;
-      renderCards();
-    });
-    els.filterLevel.addEventListener('change', (e) => {
-      state.level = e.target.value;
-      renderCards();
-    });
-    els.filterStatus.addEventListener('change', (e) => {
-      state.status = e.target.value;
-      renderCards();
-    });
-    els.filterCategory.addEventListener('change', (e) => {
-      state.category = e.target.value;
-      renderCards();
-    });
-    els.filterCountry.addEventListener('change', (e) => {
-      state.country = e.target.value;
-      renderCards();
-    });
-    els.filterState.addEventListener('change', (e) => {
-      state.stateFilter = e.target.value;
-      renderCards();
-    });
-    els.filterTarget.addEventListener('change', (e) => {
-      state.target = e.target.value;
-      renderCards();
-    });
-    els.filterIncome.addEventListener('change', (e) => {
-      state.income = e.target.value;
-      renderCards();
-    });
-
-    // Provider search & filter
-    els.providerSearchInput.addEventListener('input', (e) => {
-      state.providerSearch = e.target.value;
-      renderProviders();
-    });
-    els.providerKindFilter.addEventListener('change', (e) => {
-      state.providerKind = e.target.value;
-      renderProviders();
-    });
-
-    // Chips
-    els.chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        const val = chip.getAttribute('data-chip');
-        if (state.activeChip === val) {
-          state.activeChip = null;
-          chip.classList.remove('active');
+        if (kind === 'funds') {
+          state.category = 'Scholarship';
+        } else if (kind === 'internships_projects') {
+          state.category = 'Internship';
         } else {
-          els.chips.forEach(c => c.classList.remove('active'));
-          state.activeChip = val;
-          chip.classList.add('active');
+          state.category = 'all';
         }
+
+        if (els.filterLevel) els.filterLevel.value = stage;
+        if (els.filterSection) els.filterSection.value = place;
+        if (els.filterCategory) els.filterCategory.value = state.category;
+
+        renderCards();
+        scrollToResults();
+      });
+    }
+
+    // Reset Hero
+    if (els.btnResetHero) {
+      els.btnResetHero.addEventListener('click', () => {
+        if (els.heroStage) els.heroStage.value = 'After 12th';
+        if (els.heroPlace) els.heroPlace.value = 'all';
+        if (els.heroKind) els.heroKind.value = 'all';
+        updateHeroSummary();
+      });
+    }
+
+    // Road Track stops
+    if (els.roadStops) {
+      els.roadStops.forEach(stop => {
+        stop.addEventListener('click', () => {
+          const lvl = stop.getAttribute('data-level');
+          state.level = lvl;
+          if (els.heroStage) els.heroStage.value = lvl;
+          if (els.filterLevel) els.filterLevel.value = lvl;
+          updateHeroSummary();
+          renderCards();
+          scrollToResults();
+        });
+      });
+    }
+
+    // State Pills in Column 1
+    if (els.statePillsContainer) {
+      els.statePillsContainer.querySelectorAll('.state-pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const st = btn.getAttribute('data-state');
+          state.section = 'india';
+          state.stateFilter = st;
+          if (els.filterSection) els.filterSection.value = 'india';
+          renderCards();
+          scrollToResults();
+        });
+      });
+    }
+
+    // Nav Links
+    if (els.navLinkIndia) {
+      els.navLinkIndia.addEventListener('click', (e) => {
+        e.preventDefault();
+        state.section = 'india';
+        if (els.filterSection) els.filterSection.value = 'india';
+        renderCards();
+        scrollToResults();
+      });
+    }
+
+    if (els.navLinkAbroad) {
+      els.navLinkAbroad.addEventListener('click', (e) => {
+        e.preventDefault();
+        state.section = 'abroad';
+        if (els.filterSection) els.filterSection.value = 'abroad';
+        renderCards();
+        scrollToResults();
+      });
+    }
+
+    // Search Input with debounce
+    let searchTimer = null;
+    if (els.searchInput) {
+      els.searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          state.searchQuery = e.target.value;
+          renderCards();
+        }, 200);
+      });
+    }
+
+    // Filters Sidebar Selects
+    if (els.filterLevel) {
+      els.filterLevel.addEventListener('change', (e) => {
+        state.level = e.target.value;
         renderCards();
       });
-    });
+    }
 
-    // Resets
-    els.btnResetFilters.addEventListener('click', resetAllFilters);
-    els.btnResetNoResults.addEventListener('click', resetAllFilters);
+    if (els.filterSection) {
+      els.filterSection.addEventListener('change', (e) => {
+        state.section = e.target.value;
+        renderCards();
+      });
+    }
 
-    // View layout
-    els.viewModeGrid.addEventListener('click', () => {
-      state.viewMode = 'grid';
-      els.viewModeGrid.classList.add('active');
-      els.viewModeCompact.classList.remove('active');
+    if (els.filterStatus) {
+      els.filterStatus.addEventListener('change', (e) => {
+        state.status = e.target.value;
+        renderCards();
+      });
+    }
+
+    if (els.filterCategory) {
+      els.filterCategory.addEventListener('change', (e) => {
+        state.category = e.target.value;
+        renderCards();
+      });
+    }
+
+    if (els.filterCountry) {
+      els.filterCountry.addEventListener('change', (e) => {
+        state.country = e.target.value;
+        renderCards();
+      });
+    }
+
+    if (els.filterTarget) {
+      els.filterTarget.addEventListener('change', (e) => {
+        state.target = e.target.value;
+        renderCards();
+      });
+    }
+
+    if (els.filterSort) {
+      els.filterSort.addEventListener('change', (e) => {
+        state.sort = e.target.value;
+        renderCards();
+      });
+    }
+
+    // Reset Filters Button
+    const resetAllFilters = () => {
+      state.level = 'all';
+      state.section = 'all';
+      state.status = 'all';
+      state.category = 'all';
+      state.country = 'all';
+      state.stateFilter = 'all';
+      state.target = 'all';
+      state.searchQuery = '';
+
+      if (els.filterLevel) els.filterLevel.value = 'all';
+      if (els.filterSection) els.filterSection.value = 'all';
+      if (els.filterStatus) els.filterStatus.value = 'all';
+      if (els.filterCategory) els.filterCategory.value = 'all';
+      if (els.filterCountry) els.filterCountry.value = 'all';
+      if (els.filterTarget) els.filterTarget.value = 'all';
+      if (els.searchInput) els.searchInput.value = '';
+
       renderCards();
-    });
-    els.viewModeCompact.addEventListener('click', () => {
-      state.viewMode = 'compact';
-      els.viewModeCompact.classList.add('active');
-      els.viewModeGrid.classList.remove('active');
-      renderCards();
-    });
+    };
 
-    // Modals
-    els.modalCloseBtn.addEventListener('click', closeDetailModal);
-    els.detailModal.addEventListener('click', (e) => {
+    if (els.btnResetFilters) els.btnResetFilters.addEventListener('click', resetAllFilters);
+    if (els.btnResetNoResults) els.btnResetNoResults.addEventListener('click', resetAllFilters);
+
+    // Mobile Filters Toggle
+    if (els.btnMobileFilterToggle && els.filtersSidebar) {
+      els.btnMobileFilterToggle.addEventListener('click', () => {
+        els.filtersSidebar.classList.toggle('mobile-open');
+      });
+    }
+
+    if (els.btnCloseMobileFilters && els.filtersSidebar) {
+      els.btnCloseMobileFilters.addEventListener('click', () => {
+        els.filtersSidebar.classList.remove('mobile-open');
+      });
+    }
+
+    // Provider view buttons
+    if (els.btnViewProviders) {
+      els.btnViewProviders.addEventListener('click', () => {
+        window.location.hash = '#/providers';
+      });
+    }
+
+    if (els.btnBackToOpportunities) {
+      els.btnBackToOpportunities.addEventListener('click', () => {
+        window.location.hash = '';
+        state.section = 'all';
+        renderCards();
+        scrollToResults();
+      });
+    }
+
+    if (els.providerSearchInput) {
+      els.providerSearchInput.addEventListener('input', (e) => {
+        state.providerSearch = e.target.value.toLowerCase();
+        renderProviders();
+      });
+    }
+
+    // Modal Triggers
+    if (els.btnOpenCalendar) els.btnOpenCalendar.addEventListener('click', openCalendarModal);
+    if (els.btnOpenCalendarLink) els.btnOpenCalendarLink.addEventListener('click', openCalendarModal);
+    if (els.calendarCloseBtn) els.calendarCloseBtn.addEventListener('click', closeCalendarModal);
+    if (els.btnCloseCalendarFooter) els.btnCloseCalendarFooter.addEventListener('click', closeCalendarModal);
+
+    if (els.modalCloseBtn) els.modalCloseBtn.addEventListener('click', closeDetailModal);
+
+    if (els.btnOpenWizard) els.btnOpenWizard.addEventListener('click', openWizardModal);
+    if (els.wizardCloseBtn) els.wizardCloseBtn.addEventListener('click', closeWizardModal);
+    if (els.btnCancelWizard) els.btnCancelWizard.addEventListener('click', closeWizardModal);
+    if (els.btnApplyWizard) els.btnApplyWizard.addEventListener('click', applyWizard);
+
+    if (els.btnSavedBookmarks) els.btnSavedBookmarks.addEventListener('click', openBookmarksModal);
+    if (els.bookmarksCloseBtn) els.bookmarksCloseBtn.addEventListener('click', closeBookmarksModal);
+    if (els.btnCloseBookmarksFooter) els.btnCloseBookmarksFooter.addEventListener('click', closeBookmarksModal);
+    if (els.btnClearAllBookmarks) {
+      els.btnClearAllBookmarks.addEventListener('click', () => {
+        state.bookmarks = [];
+        safeLocalStorage('set', 'vidyasetu_bookmarks', '[]');
+        updateBookmarkBadge();
+        openBookmarksModal();
+        renderCards();
+      });
+    }
+
+    if (els.btnLaunchComparison) els.btnLaunchComparison.addEventListener('click', openCompareModal);
+    if (els.compareCloseBtn) els.compareCloseBtn.addEventListener('click', closeCompareModal);
+    if (els.btnCloseCompareFooter) els.btnCloseCompareFooter.addEventListener('click', closeCompareModal);
+    if (els.btnClearComparison) {
+      els.btnClearComparison.addEventListener('click', () => {
+        state.compare = [];
+        updateCompareDrawer();
+        renderCards();
+      });
+    }
+
+    // Close Modals on Overlay Click or Esc Key
+    window.addEventListener('click', (e) => {
       if (e.target === els.detailModal) closeDetailModal();
-    });
-    els.modalBookmarkBtn.addEventListener('click', () => {
-      if (activeModalItem) toggleBookmark(activeModalItem.id);
-    });
-
-    // Wizard
-    els.btnOpenWizard.addEventListener('click', openWizardModal);
-    els.btnHeroWizard.addEventListener('click', openWizardModal);
-    els.wizardCloseBtn.addEventListener('click', closeWizardModal);
-    els.btnCancelWizard.addEventListener('click', closeWizardModal);
-    els.wizardModal.addEventListener('click', (e) => {
-      if (e.target === els.wizardModal) closeWizardModal();
-    });
-    els.btnApplyWizard.addEventListener('click', applyWizard);
-
-    // Compare
-    els.btnLaunchComparison.addEventListener('click', openComparisonModal);
-    els.compareCloseBtn.addEventListener('click', closeComparisonModal);
-    els.btnCloseCompareFooter.addEventListener('click', closeComparisonModal);
-    els.compareModal.addEventListener('click', (e) => {
-      if (e.target === els.compareModal) closeComparisonModal();
-    });
-    els.btnClearComparison.addEventListener('click', () => {
-      state.compare = [];
-      updateCompareDrawer();
-      renderCards();
-    });
-
-    // Calendar
-    els.btnOpenCalendar.addEventListener('click', openCalendarModal);
-    els.calendarCloseBtn.addEventListener('click', closeCalendarModal);
-    els.btnCloseCalendarFooter.addEventListener('click', closeCalendarModal);
-    els.calendarModal.addEventListener('click', (e) => {
       if (e.target === els.calendarModal) closeCalendarModal();
-    });
-
-    // Bookmarks
-    els.btnSavedBookmarks.addEventListener('click', openBookmarksModal);
-    els.bookmarksCloseBtn.addEventListener('click', closeBookmarksModal);
-    els.btnCloseBookmarksFooter.addEventListener('click', closeBookmarksModal);
-    els.bookmarksModal.addEventListener('click', (e) => {
+      if (e.target === els.wizardModal) closeWizardModal();
+      if (e.target === els.compareModal) closeCompareModal();
       if (e.target === els.bookmarksModal) closeBookmarksModal();
     });
-    els.btnClearAllBookmarks.addEventListener('click', () => {
-      if (confirm('Clear all saved scholarships?')) {
-        state.bookmarks = [];
-        localStorage.setItem('vidyasetu_bookmarks', '[]');
-        updateBookmarkBadge();
-        renderCards();
-        openBookmarksModal();
-      }
-    });
 
-    // Escape Key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDetailModal();
-        closeWizardModal();
-        closeComparisonModal();
         closeCalendarModal();
+        closeWizardModal();
+        closeCompareModal();
         closeBookmarksModal();
       }
     });
   }
 
-  // Global methods for inline handlers
+  // --------------------------------------------------------------------------
+  // Global API
+  // --------------------------------------------------------------------------
   window.VidyaSetu = {
     openDetailModal,
     closeDetailModal,
     toggleBookmark,
     toggleCompare,
     openBookmarksModal,
-    closeBookmarksModal
+    toggleDocCheck
   };
 
-  // Run on ready
+  // Launch on DOM Ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
