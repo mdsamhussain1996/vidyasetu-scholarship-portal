@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "id": "iitd-sura-internship",
+    "title": "IIT Delhi Summer Undergraduate Research Award (SURA)",
+    "section=": "india",
+    "country": "India",
+    "state": "Delhi",
+    "type": "university",
+    "category": "Internship",
+    "educationLevel": [
+      "Bachelor"
+    ],
+    "streams": [
+      "Engineering",
+      "Computer Science",
+      "Materials Science",
+      "Biochemical",
+      "Mathematics"
+    ],
+    "targetGroup": [
+      "Undergraduate Engineering Students"
+    ],
+    "fundingAmount": "₹10,000 summer research stipend + Subsidized campus hostel in New Delhi",
+    "amountValINR": 10000,
+    "provider": {
+      "name": "Indian Institute of Technology Delhi (IIT Delhi)",
+      "kind": "university",
+      "slug": "iit-delhi",
+      "website": "https://home.iitd.ac.in"
+    },
+    "eligibility": "Undergraduate engineering students with CGPA >= 8.0 interested in advanced hardware or theoretical research.",
+    "incomeLimitINR": null,
+    "openDate": "2026-02-01",
+    "deadline": "2026-04-03",
+    "deadlineText": "Next round opens January/February 2027; deadline early April 2027",
+    "recurring": false,
+    "status": "closed",
+    "officialLink": "https://home.iitd.ac.in",
+    "sourceUrl": "https://home.iitd.ac.in",
+    "documentsRequired": [
+      "Resume",
+      "Transcripts",
+      "Letter of Recommendation from HOD",
+      "Statement of Purpose"
+    ],
+    "applicationProcess": [
+      "Submit online application to IIT Delhi SURA committee",
+      "Faculty departments shortlist applicants",
+      "8-week summer research stay on IIT Delhi campus"
+    ],
+    "tags": [
+      "IIT Delhi",
+      "SURA",
+      "Undergraduate",
+      "Engineering",
+      "Summer Research"
+    ],
+    "firstSeen": "2026-10-12",
+    "lastVerified": "2026-10-12",
+    "verifiedBy": "auto",
+    "confidence": 0.9,
+    "section": "india",
+    "dateConfidence": "confirmed",
+    "guidelinesLink": null,
+    "evidence": "IIT Delhi Summer Research Fellowship / SURA Programme 2026 submission deadline: April 3, 2026."
+  }
+]
