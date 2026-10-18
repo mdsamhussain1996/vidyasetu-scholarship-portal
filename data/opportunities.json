@@ -112,7 +112,7 @@
     "deadline": "2026-12-15",
     "deadlineText": "Closes 15 Dec 2026",
     "recurring": true,
-    "status": "open",
+    "status": "needs-review",
     "officialLink": "https://online-inspire.gov.in/Content/GuidelineSHE",
     "sourceUrl": "https://online-inspire.gov.in",
     "documentsRequired": [
@@ -177,7 +177,7 @@
     "deadline": null,
     "deadlineText": "Expected next round (Next round opens mid-April 2027; deadline late May 2027)",
     "recurring": true,
-    "status": "upcoming",
+    "status": "needs-review",
     "officialLink": "https://online-inspire.gov.in/Content/GuidelineFellowship",
     "sourceUrl": "https://online-inspire.gov.in",
     "documentsRequired": [
@@ -241,7 +241,7 @@
     "deadline": null,
     "deadlineText": "Expected next round (Next round opens mid-August 2027; deadline mid-September 2027)",
     "recurring": true,
-    "status": "upcoming",
+    "status": "needs-review",
     "officialLink": "https://online-inspire.gov.in/Content/GuidelineFaculty",
     "sourceUrl": "https://online-inspire.gov.in",
     "documentsRequired": [
@@ -563,7 +563,7 @@
     "deadline": "2027-03-15",
     "deadlineText": "Closing 15 Mar 2027",
     "recurring": true,
-    "status": "open",
+    "status": "needs-review",
     "officialLink": "https://pgscholarship.aicte-india.org/",
     "sourceUrl": "https://pgscholarship.aicte-india.org",
     "documentsRequired": [
@@ -938,7 +938,7 @@
     "deadline": null,
     "deadlineText": "Expected next round (Next round opens early March 2027; deadline early April 2027)",
     "recurring": true,
-    "status": "upcoming",
+    "status": "needs-review",
     "officialLink": "https://dbt.nta.ac.in",
     "sourceUrl": "https://exams.nta.nic.in/gat-bet/",
     "documentsRequired": [
@@ -1944,7 +1944,7 @@
     "deadline": null,
     "deadlineText": "Usually Jul–Dec",
     "recurring": true,
-    "status": "open",
+    "status": "needs-review",
     "officialLink": "https://tribal.nic.in/PostMatric.aspx",
     "sourceUrl": "https://tribal.nic.in/PostMatric.aspx",
     "documentsRequired": [
