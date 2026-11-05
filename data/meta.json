@@ -1,6 +1,6 @@
 {
-  "lastRun": "2026-11-04T09:36:23.484244",
-  "lastVerifiedDate": "2026-11-04",
+  "lastRun": "2026-11-05T09:42:15.557431",
+  "lastVerifiedDate": "2026-11-05",
   "total": 186,
   "india": 125,
   "abroad": 61,
@@ -17,9 +17,9 @@
   "archivedCount": 1,
   "brokenLinks": 0,
   "addedLastRun": 0,
-  "updatedLastRun": 1,
+  "updatedLastRun": 0,
   "archivedLastRun": 0,
   "checkedSourcesCount": 30,
-  "changedSourcesCount": 11,
+  "changedSourcesCount": 10,
   "confidenceAverage": 0.7
 }
