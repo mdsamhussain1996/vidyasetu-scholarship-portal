@@ -112,7 +112,7 @@
     "deadline": "2026-12-15",
     "deadlineText": "Closes 15 Dec 2026",
     "recurring": true,
-    "status": "needs-review",
+    "status": "open",
     "officialLink": "https://online-inspire.gov.in/Content/GuidelineSHE",
     "sourceUrl": "https://online-inspire.gov.in",
     "documentsRequired": [
@@ -563,7 +563,7 @@
     "deadline": "2027-03-15",
     "deadlineText": "Closing 15 Mar 2027",
     "recurring": true,
-    "status": "needs-review",
+    "status": "open",
     "officialLink": "https://pgscholarship.aicte-india.org/",
     "sourceUrl": "https://pgscholarship.aicte-india.org",
     "documentsRequired": [
